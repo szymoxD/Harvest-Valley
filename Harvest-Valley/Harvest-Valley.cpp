@@ -76,17 +76,17 @@ Obiekt kolotl("../obj/kolo_duze_l.obj", 20.0f, &ursus, 0, 0, 0, 0, 0, 0, 1.02619
 Obiekt kolotp("../obj/kolo_duze_p.obj", 20.0f, &ursus, 0, 0, 0, 0, 0, 0, -1.02619, 0, 0);
 Obiekt kolopl("../obj/kolo_male_l.obj", 20.0f, &ursus, 0, 0, 0, 0, 0, 0, 0.914969, 0, 2.69381); //origin z blendera dopisany
 Obiekt kolopp("../obj/kolo_male_p.obj", 20.0f, &ursus, 0, 0, 0, 0, 0, 0, -0.914969, 0, 2.69381);   //x=x,  z=-y 
-Teren terrain("../obj/terrainv2.obj", 20.0f, nullptr, 0, 0, 0, 0, -5, 0);
+Teren terrain("../obj/terrain.obj", 20.0f, nullptr, 0, 0, 0, 0, -5, 0);
 Obiekt ursus_pokaz("../obj/full_tractor.obj", 20.0f, nullptr, 0, 0, 0, -80, 0, 0);
 Obiekt szopa("../obj/szopa.obj", 20.0f, nullptr, 0, 0, 0, 0, 0, 0);
 
 int fps = 60;
 
 bool quit = false;
-bool camswitch = true;
 bool firstcam = true;
 float speed = 250.0;
 float wheelspan = 0.0;
+float test = 0;
 float axelspan = 0.0;
 Keyboard keyboard;
 
@@ -364,8 +364,9 @@ void Update() {
 		kolopp.set_rotate_y(-45);
 		kolopl.set_rotate_y(-45);
 	}
-	else if (keyboard.Pressed('Q') != -1) {
+	else if (keyboard.Pressed('Q') != -1 && !keyboard.switched('Q')) {
 		ursus.rotate(0, 90, 0);
+		keyboard.block('Q');
 	}
 	else {
 		kolopp.set_rotate_y(0);
@@ -387,13 +388,14 @@ void Update() {
 		if (plug.if_unmounted())
 			plug.mount(ursus);
 	}
-	else if (keyboard.Pressed('F') != -1 && camswitch) {
+	else if (keyboard.Pressed('F') != -1 && !keyboard.switched('F')) {
 		firstcam = !firstcam;
-		camswitch = false;
+		keyboard.block('F');
 	}
-	//else if (keyboard.Pressed('T') != -1 && camswitch) {
-	//	ursus.set_position(ursus.get_position_x() + 1000, ursus.get_position_y(), ursus.get_position_z());
-	//}
+	/*else if (keyboard.Pressed('T') != -1 && !keyboard.switched('T')) {  //teleport x +1000
+		ursus.set_position(ursus.get_position_x() + 1000, ursus.get_position_y(), ursus.get_position_z());
+		keyboard.block('T');
+	}*/
 	if (keyboard.Pressed(VK_UP) != -1) {
 		if (xRot > -90)
 			xRot -= 100.0f * elapsed;
@@ -419,11 +421,9 @@ void Update() {
 	float ursus_pos = terrain.get_height(ursus.get_absolute_position_x(), ursus.get_absolute_position_z());
 	float ursus_rot_x = -(plheight + ppheight - tlheight - tpheight) / 2;
 	float ursus_rot_z = -(tpheight + ppheight - tlheight - plheight) / 2;
-	float ursus_rot_y = ursus.get_rotation_y();
 	float ursus_rot_x_tan = atan(ursus_rot_x / wheelspan);
-	float ursus_rot_z_tan = atan(ursus_rot_z / axelspan);
+	float ursus_rot_z_tan = atan(ursus_rot_z / axelspan);//    //ursus_rot_x_tan * 180 / GL_PI   //-ursus_rot_z_tan * 180 / GL_PI
 	ursus.set_rotate(ursus_rot_x_tan * 180 / GL_PI, ursus.get_rotation_y(), -ursus_rot_z_tan * 180 / GL_PI);  //przod tyl, 0, lewo prawo
-
 	ursus.set_position(ursus.get_position_x(), ursus_pos, ursus.get_position_z());
 }
 void RenderScene(void)
@@ -441,9 +441,9 @@ void RenderScene(void)
 	float camZ;
 	// pozycja kamery
 	if (firstcam) {
-		camX = ursus.get_position_x();
-		camY = ursus.get_position_y() + 55;
-		camZ = ursus.get_position_z();
+		camX = ursus.get_position_x() + 55 * sin((ursus.get_rotation_x()) * GL_PI / 180) * sin((ursus.get_rotation_z() + 90) * GL_PI / 180) * sin((ursus.get_rotation_y()) * GL_PI / 180) - 55 * sin(ursus.get_rotation_z() * GL_PI / 180) * sin((ursus.get_rotation_y()+90) * GL_PI / 180);
+		camY = ursus.get_position_y() + 55 * cos(ursus.get_rotation_x() * GL_PI / 180) * cos(ursus.get_rotation_z() * GL_PI / 180);
+		camZ = ursus.get_position_z() + 55 * sin((ursus.get_rotation_z()) * GL_PI / 180) * sin((ursus.get_rotation_y()) * GL_PI / 180) + 55 * sin((ursus.get_rotation_z() + 90) * GL_PI / 180) * sin(ursus.get_rotation_x() * GL_PI / 180) * sin((ursus.get_rotation_y() + 90) * GL_PI / 180);
 	}
 	else {
 		camX = ursus.get_position_x() - (125 + 60 * xRot / -90) * sin((ursus.get_rotation_y() + yRot) * GL_PI / 180);
@@ -451,6 +451,7 @@ void RenderScene(void)
 		camZ = ursus.get_position_z() - (125 + 60 * xRot / -90) * cos((ursus.get_rotation_y() + yRot) * GL_PI / 180);
 	}
 	if (firstcam) {
+		glRotatef(ursus.get_rotation_z(), 0.0f, 0.0f, 1.0f); // Obrót kamery względem osi Y
 		glRotatef(xRot + 40, 1.0f, 0.0f, 0.0f); // Obrót kamery względem osi X
 		glRotatef(-yRot - ursus.get_rotation_y() + 180, 0.0f, 1.0f, 0.0f); // Obrót kamery względem osi Y
 	}
@@ -878,8 +879,6 @@ LRESULT CALLBACK WndProc(HWND    hWnd,
 	case WM_KEYUP:
 	{
 		keyboard.Remove(wParam);
-		if (wParam == 'F')
-			camswitch = true;
 	}
 	break;
 
