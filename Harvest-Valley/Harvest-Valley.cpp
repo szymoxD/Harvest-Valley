@@ -76,16 +76,17 @@ Obiekt kolotl("../obj/kolo_duze_l.obj", 20.0f, &ursus, 0, 0, 0, 0, 0, 0, 1.02619
 Obiekt kolotp("../obj/kolo_duze_p.obj", 20.0f, &ursus, 0, 0, 0, 0, 0, 0, -1.02619, 0, 0);
 Obiekt kolopl("../obj/kolo_male_l.obj", 20.0f, &ursus, 0, 0, 0, 0, 0, 0, 0.914969, 0, 2.69381); //origin z blendera dopisany
 Obiekt kolopp("../obj/kolo_male_p.obj", 20.0f, &ursus, 0, 0, 0, 0, 0, 0, -0.914969, 0, 2.69381);   //x=x,  z=-y 
-Teren terrain("../obj/terrainv2.obj", 20.0f, nullptr, 0, 0, 0, 0, -5, 0);
+Teren terrain("../obj/terrain.obj", 20.0f, nullptr, 0, 0, 0, 0, -5, 0);
 Obiekt ursus_pokaz("../obj/full_tractor.obj", 20.0f, nullptr, 0, 0, 0, -80, 0, 0);
 Obiekt szopa("../obj/szopa.obj", 20.0f, nullptr, 0, 0, 0, 0, 0, 0);
+Obiekt tree("../obj/tree.obj", 20.0f, nullptr, 0, 0, 0, 2000, 0, 2000);
 
 int fps = 60;
 
 bool quit = false;
 bool camswitch = true;
 bool firstcam = true;
-float speed = 250.0;
+float speed = 500.0;
 float wheelspan = 0.0;
 float axelspan = 0.0;
 Keyboard keyboard;
@@ -470,6 +471,8 @@ void RenderScene(void)
 	glPolygonMode(GL_BACK, GL_FILL);
 	// Enable vertex attributes
 	//ursus.set_position(ursus.get_position_x(), 0, ursus.get_position_z());
+	glColor3f(0.5f, 0.5f, 0.5f);
+	tree.draw();
 	plug.draw();
 	cross(0, 0, 40);
 	szopa.draw();
@@ -771,7 +774,12 @@ LRESULT CALLBACK WndProc(HWND    hWnd,
 		szopa.loadBMP_custom("../obj/szopa_texture.bmp");
 		plug.loadBMP_custom("../obj/plug_texture.bmp");
 		terrain.loadBMP_custom("../obj/terrain_material.bmp");
-		ursus.loadBMP_custom("../obj/assimov.bmp");
+		ursus.loadBMP_custom("../obj/tractor_texture.bmp");
+		tree.loadBMP_custom("../obj/tree_texture.bmp");
+		kolopp.loadBMP_custom("../obj/kola_texture.bmp");
+		kolopl.loadBMP_custom("../obj/kola_texture.bmp");
+		kolotp.loadBMP_custom("../obj/kola_texture.bmp");
+		kolotl.loadBMP_custom("../obj/kola_texture.bmp");
 
 		wheelspan = kolopp.get_absolute_position_z() * sin((ursus.get_rotation_y() + 90) * 3.14159 / 180)
 			+ kolotp.get_absolute_position_z() * sin((ursus.get_rotation_y() + 90) * 3.14159 / 180);
