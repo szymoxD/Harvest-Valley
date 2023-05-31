@@ -76,7 +76,7 @@ Obiekt kolotl("../obj/kolo_duze_l.obj", 20.0f, &ursus, 0, 0, 0, 0, 0, 0, 1.02619
 Obiekt kolotp("../obj/kolo_duze_p.obj", 20.0f, &ursus, 0, 0, 0, 0, 0, 0, -1.02619, 0, 0);
 Obiekt kolopl("../obj/kolo_male_l.obj", 20.0f, &ursus, 0, 0, 0, 0, 0, 0, 0.914969, 0, 2.69381); //origin z blendera dopisany
 Obiekt kolopp("../obj/kolo_male_p.obj", 20.0f, &ursus, 0, 0, 0, 0, 0, 0, -0.914969, 0, 2.69381);   //x=x,  z=-y 
-Teren terrain("../obj/terrain.obj", 20.0f, nullptr, 0, 0, 0, 0, -5, 0);
+Teren terrain("../obj/terrainv2.obj", 20.0f, nullptr, 0, 0, 0, 0, -5, 0);
 Obiekt ursus_pokaz("../obj/full_tractor.obj", 20.0f, nullptr, 0, 0, 0, -80, 0, 0);
 Obiekt szopa("../obj/szopa.obj", 20.0f, nullptr, 0, 0, 0, 0, 0, 0);
 

@@ -100,6 +100,7 @@ Obiekt::~Obiekt() {
 void Obiekt::draw() {
 
 	glVertexPointer(3, GL_FLOAT, 0, vertexArray);
+	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
 	glPushMatrix();
