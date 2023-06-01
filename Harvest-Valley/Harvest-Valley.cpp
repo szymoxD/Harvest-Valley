@@ -33,6 +33,7 @@
 #include "Obiekt.h"
 #include "Teren.h"
 #include "Keyboard.h"
+#include "particle.h"
 #include <ctime>
 
 #define glRGB(x, y, z)	glColor3ub((GLubyte)x, (GLubyte)y, (GLubyte)z)
@@ -69,24 +70,28 @@ LRESULT CALLBACK WndProc(HWND    hWnd,
 void SetDCPixelFormat(HDC hDC);
 
 //deklaracje
+float scale = 20.0f;
 
-Obiekt ursus("../obj/tractor.obj", 20.0f, nullptr, 0, 0, 0, 0, 0, 0);
-Obiekt plug("../obj/plug.obj", 20.0f, &ursus, 0, 0, 0, 0, 0, 0, 0, 1.2988, -0.772357);
-Obiekt kolotl("../obj/kolo_duze_l.obj", 20.0f, &ursus, 0, 0, 0, 0, 0, 0, 1.02619, 0, 0);
-Obiekt kolotp("../obj/kolo_duze_p.obj", 20.0f, &ursus, 0, 0, 0, 0, 0, 0, -1.02619, 0, 0);
-Obiekt kolopl("../obj/kolo_male_l.obj", 20.0f, &ursus, 0, 0, 0, 0, 0, 0, 0.914969, 0, 2.69381); //origin z blendera dopisany
-Obiekt kolopp("../obj/kolo_male_p.obj", 20.0f, &ursus, 0, 0, 0, 0, 0, 0, -0.914969, 0, 2.69381);   //x=x,  z=-y 
-Teren terrain("../obj/terrain.obj", 20.0f, nullptr, 0, 0, 0, 0, -5, 0);
-Obiekt ursus_pokaz("../obj/full_tractor.obj", 20.0f, nullptr, 0, 0, 0, -80, 0, 0);
-Obiekt szopa("../obj/szopa.obj", 20.0f, nullptr, 0, 0, 0, 0, 0, 0);
-Obiekt tree("../obj/tree.obj", 20.0f, nullptr, 0, 0, 0, 2000, 0, 2000);
+Obiekt ursus("../obj/tractor.obj", scale, nullptr, 0, 0, 0, 0, 0, 0);
+Obiekt plug("../obj/plug.obj", scale, &ursus, 0, 0, 0, 0, 0, 0, 0, 1.2988, -0.772357);
+Obiekt kolotl("../obj/kolo_duze_l.obj", scale, &ursus, 0, 0, 0, 0, 0, 0, 1.02619, 0.916822, 0);
+Obiekt kolotp("../obj/kolo_duze_p.obj", scale, &ursus, 0, 0, 0, 0, 0, 0, -1.02619, 0.916822, 0);
+Obiekt kolopl("../obj/kolo_male_l.obj", scale, &ursus, 0, 0, 0, 0, 0, 0, 0.914969, 0.42519, 2.69381); //origin z blendera dopisany
+Obiekt kolopp("../obj/kolo_male_p.obj", scale, &ursus, 0, 0, 0, 0, 0, 0, -0.914969, 0.42519, 2.69381);   //x=x,  z=-y 
+Teren terrain("../obj/terrain.obj", scale, nullptr, 0, 0, 0, 0, -5, 0);
+Obiekt ursus_pokaz("../obj/full_tractor.obj", scale, nullptr, 0, 0, 0, -80, 0, 0);
+Obiekt szopa("../obj/szopa.obj", scale, nullptr, 0, 0, 0, 0, 0, 0);
+Obiekt tree("../obj/tree.obj", scale, nullptr, 0, 0, 0, 2000, 0, 2000);
 
+const int gestosc = 4000;
+particle dym[gestosc];
 int fps = 60;
 
 bool quit = false;
 bool firstcam = true;
-float speed = 500.0;
+float speed = 100;
 float wheelspan = 0.0;
+float pipe_distance;
 float test = 0;
 float axelspan = 0.0;
 Keyboard keyboard;
@@ -344,6 +349,19 @@ void Update() {
 			//plug.rotate(0, -50.0f * elapsed, 0);
 		}
 		//plug.move(50.0f * elapsed * sin(ursus.get_rotation_y() * GL_PI / 180), 0, 50.0f * elapsed * sin((ursus.get_rotation_y() + 90) * GL_PI / 180));
+		kolopp.rotate_x(speed * elapsed/(kolopp.get_center_y() * scale)*360);
+		kolopl.rotate_x(speed * elapsed/(kolopl.get_center_y() * scale) * 360);
+		kolotp.rotate_x(speed * elapsed/(kolotp.get_center_y() * scale) * 360);
+		kolotl.rotate_x(speed * elapsed/(kolotl.get_center_y() * scale) * 360);
+
+		float xrot = 22;
+		float zrot = -12;
+		float px = ursus.get_position_x() + pipe_distance * sin((ursus.get_rotation_x()+xrot) * GL_PI / 180) * sin((ursus.get_rotation_z() + zrot + 90) * GL_PI / 180) * sin((ursus.get_rotation_y()) * GL_PI / 180) - pipe_distance * sin((ursus.get_rotation_z() + zrot) * GL_PI / 180) * sin((ursus.get_rotation_y() + 90) * GL_PI / 180);
+		float py = ursus.get_position_y() + pipe_distance * cos((ursus.get_rotation_x()+xrot) * GL_PI / 180) * cos((ursus.get_rotation_z() + zrot) * GL_PI / 180);
+		float pz = ursus.get_position_z() + pipe_distance * sin((ursus.get_rotation_z() + zrot) * GL_PI / 180) * sin((ursus.get_rotation_y()) * GL_PI / 180) + pipe_distance * sin((ursus.get_rotation_z() + zrot + 90) * GL_PI / 180) * sin((ursus.get_rotation_x() + xrot) * GL_PI / 180) * sin((ursus.get_rotation_y() + 90) * GL_PI / 180);
+		for (int i = 0; i < gestosc; i++)
+			if (dym[i].if_dead())
+				dym[i] = particle(px, py, pz);
 	}
 	else if (keyboard.Pressed('S') != -1) {
 		ursus.move(-speed * elapsed * sin(ursus.get_rotation_y() * GL_PI / 180), 0, -speed * elapsed * sin((ursus.get_rotation_y() + 90) * GL_PI / 180));
@@ -356,6 +374,18 @@ void Update() {
 			//plug.rotate(0, 50.0f * elapsed, 0);
 		}
 		//plug.move(-50.0f * elapsed * sin(ursus.get_rotation_y() * GL_PI / 180), 0, -50.0f * elapsed * sin((ursus.get_rotation_y() + 90) * GL_PI / 180));
+		kolopp.rotate_x(-speed * elapsed / (kolopp.get_center_y() * scale) * 360);
+		kolopl.rotate_x(-speed * elapsed / (kolopl.get_center_y() * scale) * 360);
+		kolotp.rotate_x(-speed * elapsed / (kolotp.get_center_y() * scale) * 360);
+		kolotl.rotate_x(-speed * elapsed / (kolotl.get_center_y() * scale) * 360);
+		float xrot = 22;
+		float zrot = -12;
+		float px = ursus.get_position_x() + pipe_distance * sin((ursus.get_rotation_x() + xrot) * GL_PI / 180) * sin((ursus.get_rotation_z() + zrot + 90) * GL_PI / 180) * sin((ursus.get_rotation_y()) * GL_PI / 180) - pipe_distance * sin((ursus.get_rotation_z() + zrot) * GL_PI / 180) * sin((ursus.get_rotation_y() + 90) * GL_PI / 180);
+		float py = ursus.get_position_y() + pipe_distance * cos((ursus.get_rotation_x() + xrot) * GL_PI / 180) * cos((ursus.get_rotation_z() + zrot) * GL_PI / 180);
+		float pz = ursus.get_position_z() + pipe_distance * sin((ursus.get_rotation_z() + zrot) * GL_PI / 180) * sin((ursus.get_rotation_y()) * GL_PI / 180) + pipe_distance * sin((ursus.get_rotation_z() + zrot + 90) * GL_PI / 180) * sin((ursus.get_rotation_x() + xrot) * GL_PI / 180) * sin((ursus.get_rotation_y() + 90) * GL_PI / 180);
+		for (int i = 0; i < gestosc; i++)
+			if (dym[i].if_dead())
+				dym[i] = particle(px, py, pz);
 	}
 	if (keyboard.Pressed('A') != -1) {
 		kolopp.set_rotate_y(45);
@@ -426,6 +456,9 @@ void Update() {
 	float ursus_rot_z_tan = atan(ursus_rot_z / axelspan);//    //ursus_rot_x_tan * 180 / GL_PI   //-ursus_rot_z_tan * 180 / GL_PI
 	ursus.set_rotate(ursus_rot_x_tan * 180 / GL_PI, ursus.get_rotation_y(), -ursus_rot_z_tan * 180 / GL_PI);  //przod tyl, 0, lewo prawo
 	ursus.set_position(ursus.get_position_x(), ursus_pos, ursus.get_position_z());
+	for (int i = 0; i < gestosc; i++) {
+		dym[i].update(elapsed);
+		}
 }
 void RenderScene(void)
 {
@@ -487,7 +520,8 @@ void RenderScene(void)
 	//glTranslatef(20 * 0.914969, 0, 20 * 2.69381);
 	//glRotatef(45, 0.0f, 1.0f, 0.0f);
 	kolopp.draw();
-
+	for (int i = 0; i < gestosc; i++)
+		dym[i].draw();
 	//glRotatef(-45, 0.0f, 1.0f, 0.0f);
 	//glTranslatef(-20 * 0.914969, 0,- 20 * 2.69381);
 
@@ -785,6 +819,7 @@ LRESULT CALLBACK WndProc(HWND    hWnd,
 		wheelspan = kolopp.get_absolute_position_z() * sin((ursus.get_rotation_y() + 90) * 3.14159 / 180)
 			+ kolotp.get_absolute_position_z() * sin((ursus.get_rotation_y() + 90) * 3.14159 / 180);
 		axelspan = -kolotl.get_absolute_position_x() * sin((ursus.get_rotation_y() + 90) * 3.14159 / 180);
+		pipe_distance = sqrt(14 * 14 + 60 * 60 + 25 * 25);
 		break;
 
 		// Window is being destroyed, cleanup

@@ -146,11 +146,13 @@
     <ClCompile Include="Harvest-Valley.cpp" />
     <ClCompile Include="Keyboard.cpp" />
     <ClCompile Include="Obiekt.cpp" />
+    <ClCompile Include="particle.cpp" />
     <ClCompile Include="Teren.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Keyboard.h" />
     <ClInclude Include="Obiekt.h" />
+    <ClInclude Include="particle.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="Teren.h" />
   </ItemGroup>

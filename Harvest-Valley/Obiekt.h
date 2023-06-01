@@ -45,6 +45,9 @@ public:
 	float get_rotation_x()const { return rot.x; }
 	float get_rotation_y()const { return rot.y; }
 	float get_rotation_z()const { return rot.z; }
+	float get_center_x()const { return center.x; }
+	float get_center_y()const { return center.y; }
+	float get_center_z()const { return center.z; }
 	float get_position_x()const { return pos.x; }
 	float get_position_y()const { return pos.y; }
 	float get_position_z()const { return pos.z; }
