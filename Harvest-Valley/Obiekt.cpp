@@ -151,7 +151,7 @@ void Obiekt::draw() {
 void Obiekt::mount(const Obiekt& ob) {
 	if (abs(pos.x - ob.get_position_x()) < 10 && abs(pos.y - ob.get_position_y()) < 10 && abs(pos.z - ob.get_position_z()) < 10) {
 		mounted = &ob;
-		set_position(mounted->get_position_x(), mounted->get_position_y(), mounted->get_position_z());
+		set_position(0,0,0);
 		set_rotate(0, 0, 0);
 	}
 }
@@ -276,4 +276,9 @@ Obiekt::Obiekt(const Obiekt& ob) {
 	if_loaded = ob.if_loaded;
 	has_texture = ob.has_texture;
 	scale = ob.scale;
+}
+void Obiekt::get_relative_position(float& x, float& y, float& z, float radius, float xrot, float zrot) {
+	x = (*this).get_position_x() + radius * sin(((*this).get_rotation_x() + xrot) * GL_PI / 180) * sin(((*this).get_rotation_z() + zrot + 90) * GL_PI / 180) * sin(((*this).get_rotation_y()) * GL_PI / 180) - radius * sin(((*this).get_rotation_z() + zrot) * GL_PI / 180) * sin(((*this).get_rotation_y() + 90) * GL_PI / 180);
+	y = (*this).get_position_y() + radius * cos(((*this).get_rotation_x() + xrot) * GL_PI / 180) * cos(((*this).get_rotation_z() + zrot) * GL_PI / 180);
+	z = (*this).get_position_z() + radius * sin(((*this).get_rotation_z() + zrot) * GL_PI / 180) * sin(((*this).get_rotation_y()) * GL_PI / 180) + radius * sin(((*this).get_rotation_z() + zrot + 90) * GL_PI / 180) * sin(((*this).get_rotation_x() + xrot) * GL_PI / 180) * sin(((*this).get_rotation_y() + 90) * GL_PI / 180);
 }

@@ -3,6 +3,7 @@
 #include <vector>
 #include "glm\glm.hpp"
 #include <gl\glu.h>
+#define GL_PI 3.14159
 #pragma once
 class Obiekt
 {
@@ -57,5 +58,6 @@ public:
 	GLfloat* va() { return vertexArray; }
 	std::vector< glm::vec3 > ver() { return vertices; }
 	GLuint loadBMP_custom(const char* imagepath);
+	void get_relative_position(float& x, float& y, float& z, float radius, float xrot, float zrot);
 };
 

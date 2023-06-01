@@ -96,3 +96,35 @@ float Teren::get_height(float x, float z)const {
 	float height = terrain_map[index].y;
 	return height;
 }
+int const* Teren::get_indexes(float x, float z) const {
+	if (x < terrain_map[0].x)
+		x = terrain_map[0].x;
+	else if (x > terrain_map[terrain_map.size() - 1].x)
+		x = terrain_map[terrain_map.size() - 1].x;
+	if (z < terrain_map[0].z)
+		z = terrain_map[0].z;
+	else if (z > terrain_map[terrain_map.size() - 1].z)
+		z = terrain_map[terrain_map.size() - 1].z;
+	x += (abs(terrain_map[terrain_map.size() - 1].x) + abs(terrain_map[0].x)) / 2;
+	z += (abs(terrain_map[terrain_map.size() - 1].z) + abs(terrain_map[0].z)) / 2;
+
+	double xRatio = x / (abs(terrain_map[terrain_map.size() - 1].x) + abs(terrain_map[0].x));
+	int xind = int(xRatio * (x_size - 1));
+	double xoff = (xRatio * (x_size - 1)) - xind;
+
+	double zRatio = z / (abs(terrain_map[terrain_map.size() - 1].z) + abs(terrain_map[0].z));
+	int zind = int(zRatio * (z_size - 1));
+	double zoff = (zRatio * (z_size - 1)) - zind;
+
+	int xpom = xind + 1 >= x_size ? x_size - 1 : xind + 1;
+	int zpom = zind + 1 >= x_size ? x_size - 1 : zind + 1;
+
+	int* arr = new int[4];
+
+	arr[0] = xind * z_size + zind;
+	arr[1] = xpom * z_size + zind;
+	arr[2] = xind * z_size + zpom;
+	arr[3] = xpom * z_size + zpom;
+
+	return arr;
+}

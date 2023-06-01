@@ -15,4 +15,6 @@ public:
 	}
 	bool loadTerrain(const char* path, float scale);
 	float get_height(float x, float z)const;
+	glm::vec3 operator[] (int i) const { return terrain_map[i]; }
+	int const * get_indexes(float x, float z)const;
 };

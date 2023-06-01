@@ -33,6 +33,7 @@
 #include "Obiekt.h"
 #include "Teren.h"
 #include "Keyboard.h"
+#include "pole.h"
 #include "particle.h"
 #include <ctime>
 
@@ -82,7 +83,7 @@ Teren terrain("../obj/terrain.obj", scale, nullptr, 0, 0, 0, 0, -5, 0);
 Obiekt ursus_pokaz("../obj/full_tractor.obj", scale, nullptr, 0, 0, 0, -80, 0, 0);
 Obiekt szopa("../obj/szopa.obj", scale, nullptr, 0, 0, 0, 0, 0, 0);
 Obiekt tree("../obj/tree.obj", scale, nullptr, 0, 0, 0, 2000, 0, 2000);
-
+Pole pole(&terrain);
 const int gestosc = 50000;
 particle dym[gestosc];
 int fps = 60;
@@ -100,7 +101,6 @@ Keyboard keyboard;
 clock_t delay = 1.0f / (float)fps * CLOCKS_PER_SEC;
 clock_t last_refresh;
 float elapsed;
-
 
 // Reduces a normal vector specified as a set of three coordinates,
 // to a unit normal vector of length one.
@@ -357,12 +357,20 @@ void Update() {
 
 		float xrot = 22;
 		float zrot = -12;
-		float px = ursus.get_position_x() + pipe_distance * sin((ursus.get_rotation_x()+xrot) * GL_PI / 180) * sin((ursus.get_rotation_z() + zrot + 90) * GL_PI / 180) * sin((ursus.get_rotation_y()) * GL_PI / 180) - pipe_distance * sin((ursus.get_rotation_z() + zrot) * GL_PI / 180) * sin((ursus.get_rotation_y() + 90) * GL_PI / 180);
-		float py = ursus.get_position_y() + pipe_distance * cos((ursus.get_rotation_x()+xrot) * GL_PI / 180) * cos((ursus.get_rotation_z() + zrot) * GL_PI / 180);
-		float pz = ursus.get_position_z() + pipe_distance * sin((ursus.get_rotation_z() + zrot) * GL_PI / 180) * sin((ursus.get_rotation_y()) * GL_PI / 180) + pipe_distance * sin((ursus.get_rotation_z() + zrot + 90) * GL_PI / 180) * sin((ursus.get_rotation_x() + xrot) * GL_PI / 180) * sin((ursus.get_rotation_y() + 90) * GL_PI / 180);
+		float px, py, pz;
+		ursus.get_relative_position(px, py, pz, pipe_distance, xrot, zrot);
 		for (int i = 0; i < gestosc; i++)
 			if (dym[i].if_dead())
 				dym[i] = particle(px, py, pz);
+
+		if (!plug.if_unmounted()&& plug.get_rotation_x() < 5) {
+			float xrot = -80;// pole
+			float zrot = 0;
+			float dist = 2.2 * scale;
+			float px, py, pz;
+			ursus.get_relative_position(px, py, pz, dist, xrot, zrot); 
+			pole.plow(terrain.get_indexes(px, pz));
+		}
 	}
 	else if (keyboard.Pressed('S') != -1) {
 		ursus.move(-speed * elapsed * sin(ursus.get_rotation_y() * GL_PI / 180), 0, -speed * elapsed * sin((ursus.get_rotation_y() + 90) * GL_PI / 180));
@@ -381,9 +389,8 @@ void Update() {
 		kolotl.rotate_x(-speed * elapsed / (kolotl.get_center_y() * scale) * 360);
 		float xrot = 22;
 		float zrot = -12;
-		float px = ursus.get_position_x() + pipe_distance * sin((ursus.get_rotation_x() + xrot) * GL_PI / 180) * sin((ursus.get_rotation_z() + zrot + 90) * GL_PI / 180) * sin((ursus.get_rotation_y()) * GL_PI / 180) - pipe_distance * sin((ursus.get_rotation_z() + zrot) * GL_PI / 180) * sin((ursus.get_rotation_y() + 90) * GL_PI / 180);
-		float py = ursus.get_position_y() + pipe_distance * cos((ursus.get_rotation_x() + xrot) * GL_PI / 180) * cos((ursus.get_rotation_z() + zrot) * GL_PI / 180);
-		float pz = ursus.get_position_z() + pipe_distance * sin((ursus.get_rotation_z() + zrot) * GL_PI / 180) * sin((ursus.get_rotation_y()) * GL_PI / 180) + pipe_distance * sin((ursus.get_rotation_z() + zrot + 90) * GL_PI / 180) * sin((ursus.get_rotation_x() + xrot) * GL_PI / 180) * sin((ursus.get_rotation_y() + 90) * GL_PI / 180);
+		float px, py, pz;
+		ursus.get_relative_position(px, py, pz,pipe_distance,xrot,zrot);
 		for (int i = 0; i < gestosc; i++)
 			if (dym[i].if_dead())
 				dym[i] = particle(px, py, pz);
@@ -460,6 +467,7 @@ void Update() {
 	for (int i = 0; i < gestosc; i++) {
 		dym[i].update(elapsed);
 		}
+	pole.update(elapsed);
 }
 void RenderScene(void)
 {
@@ -476,9 +484,7 @@ void RenderScene(void)
 	float camZ;
 	// pozycja kamery
 	if (firstcam) {
-		camX = ursus.get_position_x() + 55 * sin((ursus.get_rotation_x()) * GL_PI / 180) * sin((ursus.get_rotation_z() + 90) * GL_PI / 180) * sin((ursus.get_rotation_y()) * GL_PI / 180) - 55 * sin(ursus.get_rotation_z() * GL_PI / 180) * sin((ursus.get_rotation_y()+90) * GL_PI / 180);
-		camY = ursus.get_position_y() + 55 * cos(ursus.get_rotation_x() * GL_PI / 180) * cos(ursus.get_rotation_z() * GL_PI / 180);
-		camZ = ursus.get_position_z() + 55 * sin((ursus.get_rotation_z()) * GL_PI / 180) * sin((ursus.get_rotation_y()) * GL_PI / 180) + 55 * sin((ursus.get_rotation_z() + 90) * GL_PI / 180) * sin(ursus.get_rotation_x() * GL_PI / 180) * sin((ursus.get_rotation_y() + 90) * GL_PI / 180);
+		ursus.get_relative_position(camX, camY, camZ, 55, 0, 0);
 	}
 	else {
 		camX = ursus.get_position_x() - (125 + 60 * xRot / -90) * sin((ursus.get_rotation_y() + yRot) * GL_PI / 180);
@@ -523,6 +529,7 @@ void RenderScene(void)
 	kolopp.draw();
 	for (int i = 0; i < gestosc; i++)
 		dym[i].draw();
+	pole.draw();
 	//glRotatef(-45, 0.0f, 1.0f, 0.0f);
 	//glTranslatef(-20 * 0.914969, 0,- 20 * 2.69381);
 
@@ -816,6 +823,7 @@ LRESULT CALLBACK WndProc(HWND    hWnd,
 		kolopl.loadBMP_custom("../obj/kola_texture.bmp");
 		kolotp.loadBMP_custom("../obj/kola_texture.bmp");
 		kolotl.loadBMP_custom("../obj/kola_texture.bmp");
+		pole.loadBMP_custom("../obj/szopa_texture.bmp");
 
 		wheelspan = kolopp.get_absolute_position_z() * sin((ursus.get_rotation_y() + 90) * 3.14159 / 180)
 			+ kolotp.get_absolute_position_z() * sin((ursus.get_rotation_y() + 90) * 3.14159 / 180);
