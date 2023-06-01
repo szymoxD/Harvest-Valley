@@ -83,7 +83,7 @@ Obiekt ursus_pokaz("../obj/full_tractor.obj", scale, nullptr, 0, 0, 0, -80, 0, 0
 Obiekt szopa("../obj/szopa.obj", scale, nullptr, 0, 0, 0, 0, 0, 0);
 Obiekt tree("../obj/tree.obj", scale, nullptr, 0, 0, 0, 2000, 0, 2000);
 
-const int gestosc = 4000;
+const int gestosc = 50000;
 particle dym[gestosc];
 int fps = 60;
 
@@ -94,6 +94,7 @@ float wheelspan = 0.0;
 float pipe_distance;
 float test = 0;
 float axelspan = 0.0;
+float angle;
 Keyboard keyboard;
 
 clock_t delay = 1.0f / (float)fps * CLOCKS_PER_SEC;

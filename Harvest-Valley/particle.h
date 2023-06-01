@@ -12,6 +12,8 @@ class particle
 	float size;
 	glm::vec3 pos;
 	float angle;
+	float v_angle;
+	float v_acc;
 	float red;
 	float green;
 	float blue;
