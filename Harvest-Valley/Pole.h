@@ -16,7 +16,7 @@ class Pole
 	GLuint textureID;
 public:
 	Pole(Teren* teren_v, float max_lifespan=20);
-	void plow(int const* wierzcholki);
+	bool plow(int const* wierzcholki);
 	void update(float elapsed);
 	void draw();
 	GLuint loadBMP_custom(const char* imagepath);

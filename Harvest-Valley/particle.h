@@ -25,7 +25,7 @@ class particle
 	bool dead;
 public:
 
-	particle(float x = 0, float y = 40, float z = 0,float lifetime=8, float size_v=5, float speed_v=90, float red=0.5, float green=0.5, float blue=0.5, float acceleration_v=-55, bool type_v=true);
+	particle(float x = 0, float y = 40, float z = 0, bool type_v = true, bool dead_v=true, float speed_v = 90, float acceleration_v = -55, float lifetime = 8, float size_v = 5, float red = 0.5, float green = 0.5, float blue = 0.5);
 	void update(float elapsed);
 	bool if_dead() { return dead; }
 	void draw();

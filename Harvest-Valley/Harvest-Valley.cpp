@@ -50,7 +50,7 @@ static HINSTANCE hInstance;
 
 // Rotation amounts
 static GLfloat xRot = -30.0f;
-static GLfloat yRot = -180.0f;
+static GLfloat yRot = 0.0f;
 
 static GLsizei lastHeight;
 static GLsizei lastWidth;
@@ -85,7 +85,9 @@ Obiekt szopa("../obj/szopa.obj", scale, nullptr, 0, 0, 0, 0, 0, 0);
 Obiekt tree("../obj/tree.obj", scale, nullptr, 0, 0, 0, 2000, 0, 2000);
 Pole pole(&terrain);
 const int gestosc = 50000;
+const int gestosc_ziemi = 100;
 particle dym[gestosc];
+particle ziemia[gestosc_ziemi];
 int fps = 60;
 
 bool quit = false;
@@ -350,26 +352,29 @@ void Update() {
 			//plug.rotate(0, -50.0f * elapsed, 0);
 		}
 		//plug.move(50.0f * elapsed * sin(ursus.get_rotation_y() * GL_PI / 180), 0, 50.0f * elapsed * sin((ursus.get_rotation_y() + 90) * GL_PI / 180));
-		kolopp.rotate_x(speed * elapsed/(kolopp.get_center_y() * scale)*360);
-		kolopl.rotate_x(speed * elapsed/(kolopl.get_center_y() * scale) * 360);
-		kolotp.rotate_x(speed * elapsed/(kolotp.get_center_y() * scale) * 360);
-		kolotl.rotate_x(speed * elapsed/(kolotl.get_center_y() * scale) * 360);
+		kolopp.rotate_x(speed * elapsed / (kolopp.get_center_y() * scale) * 360);
+		kolopl.rotate_x(speed * elapsed / (kolopl.get_center_y() * scale) * 360);
+		kolotp.rotate_x(speed * elapsed / (kolotp.get_center_y() * scale) * 360);
+		kolotl.rotate_x(speed * elapsed / (kolotl.get_center_y() * scale) * 360);
 
-		float xrot = 22;
-		float zrot = -12;
+		float xrota = atan(25.0f / 60.0f) * 180 / GL_PI;
+		float zrota=atan( -14.0f/60.0f )*180/GL_PI;
 		float px, py, pz;
-		ursus.get_relative_position(px, py, pz, pipe_distance, xrot, zrot);
+		ursus.get_relative_position(px, py, pz, pipe_distance, xrota, zrota);
 		for (int i = 0; i < gestosc; i++)
 			if (dym[i].if_dead())
-				dym[i] = particle(px, py, pz);
+				dym[i] = particle(px, py, pz, true, false);
 
-		if (!plug.if_unmounted()&& plug.get_rotation_x() < 5) {
+		if (!plug.if_unmounted() && plug.get_rotation_x() < 5) {
 			float xrot = -80;// pole
 			float zrot = 0;
 			float dist = 2.2 * scale;
 			float px, py, pz;
-			ursus.get_relative_position(px, py, pz, dist, xrot, zrot); 
-			pole.plow(terrain.get_indexes(px, pz));
+			ursus.get_relative_position(px, py, pz, dist, xrot, zrot);
+			if (pole.plow(terrain.get_indexes(px, pz)))
+				for (int i = 0; i < gestosc_ziemi; i++)
+					if (ziemia[i].if_dead())
+						ziemia[i] = particle(px, py, pz, false, false, 150, -750, 0.3, 5, 0.28f, 0.13f, 0.02f);
 		}
 	}
 	else if (keyboard.Pressed('S') != -1) {
@@ -387,10 +392,10 @@ void Update() {
 		kolopl.rotate_x(-speed * elapsed / (kolopl.get_center_y() * scale) * 360);
 		kolotp.rotate_x(-speed * elapsed / (kolotp.get_center_y() * scale) * 360);
 		kolotl.rotate_x(-speed * elapsed / (kolotl.get_center_y() * scale) * 360);
-		float xrot = 22;
-		float zrot = -12;
+		float xrota = atan(25.0f / 60.0f) * 180 / GL_PI;
+		float zrota = atan(-14.0f / 60.0f) * 180 / GL_PI;
 		float px, py, pz;
-		ursus.get_relative_position(px, py, pz,pipe_distance,xrot,zrot);
+		ursus.get_relative_position(px, py, pz, pipe_distance, xrota, zrota);
 		for (int i = 0; i < gestosc; i++)
 			if (dym[i].if_dead())
 				dym[i] = particle(px, py, pz);
@@ -429,6 +434,7 @@ void Update() {
 	}
 	else if (keyboard.Pressed('F') != -1 && !keyboard.switched('F')) {
 		firstcam = !firstcam;
+		xRot = -30;
 		keyboard.block('F');
 	}
 	/*else if (keyboard.Pressed('T') != -1 && !keyboard.switched('T')) {  //teleport x +1000
@@ -466,7 +472,10 @@ void Update() {
 	ursus.set_position(ursus.get_position_x(), ursus_pos, ursus.get_position_z());
 	for (int i = 0; i < gestosc; i++) {
 		dym[i].update(elapsed);
-		}
+	}
+	for (int i = 0; i < gestosc_ziemi; i++) {
+		ziemia[i].update(elapsed);
+	}
 	pole.update(elapsed);
 }
 void RenderScene(void)
@@ -492,9 +501,12 @@ void RenderScene(void)
 		camZ = ursus.get_position_z() - (125 + 60 * xRot / -90) * cos((ursus.get_rotation_y() + yRot) * GL_PI / 180);
 	}
 	if (firstcam) {
-		glRotatef(ursus.get_rotation_z(), 0.0f, 0.0f, 1.0f); // Obrót kamery względem osi Y
 		glRotatef(xRot + 40, 1.0f, 0.0f, 0.0f); // Obrót kamery względem osi X
-		glRotatef(-yRot - ursus.get_rotation_y() + 180, 0.0f, 1.0f, 0.0f); // Obrót kamery względem osi Y
+		glRotatef(-yRot + 180, 0.0f, 1.0f, 0.0f); // Obrót kamery względem osi Y
+
+		glRotatef(-ursus.get_rotation_z(), 0.0f, 0.0f, 1.0f); // Obrót kamery względem osi Z
+		glRotatef(-ursus.get_rotation_x(), 1.0f, 0.0f, 0.0f); // Obrót kamery względem osi X
+		glRotatef(-ursus.get_rotation_y(), 0.0f, 1.0f, 0.0f); // Obrót kamery względem osi Y		
 	}
 	else {
 		glRotatef(-xRot / 4 + 20 + 5 * xRot / 90, 1.0f, 0.0f, 0.0f); // Obrót kamery względem osi X
@@ -529,6 +541,8 @@ void RenderScene(void)
 	kolopp.draw();
 	for (int i = 0; i < gestosc; i++)
 		dym[i].draw();
+	for (int i = 0; i < gestosc_ziemi; i++)
+		ziemia[i].draw();
 	pole.draw();
 	//glRotatef(-45, 0.0f, 1.0f, 0.0f);
 	//glTranslatef(-20 * 0.914969, 0,- 20 * 2.69381);
