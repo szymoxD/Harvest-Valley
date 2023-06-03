@@ -91,8 +91,16 @@ particle ziemia[gestosc_ziemi];
 int fps = 60;
 
 bool quit = false;
+bool plowing = false;
 bool firstcam = true;
-float speed = 100;
+float speed = 0;
+float maxspeed = 250;
+float powerfactor = 1;  //zwieksza acc, plow acc, maxplow speed, spowolnienie pod górkę
+float maxplowspeedfactor = 0.4f + 0.6f * (1.0f - 1.0f / powerfactor);  //od 0,4 do 1 dla powerfactor od 1 do niesk
+float minanglespeed = 1.0f - 1.0f / powerfactor; //pow 1 - 45 deg=0 ruchu      0 min  1 max
+float acceleration = 50 + 15 * (powerfactor - 1); //od 50 do niesk
+float plowfactor = 0.5 + 0.5f * (1.0f - 1.0f / powerfactor);   //od 0,5 do 1 dla powerfactor od 1 do niesk
+
 float wheelspan = 0.0;
 float pipe_distance;
 float test = 0;
@@ -103,6 +111,68 @@ Keyboard keyboard;
 clock_t delay = 1.0f / (float)fps * CLOCKS_PER_SEC;
 clock_t last_refresh;
 float elapsed;
+
+void acceleratevehicle(float& currentSpeed, float accelerationRate, float maxSpeed, float deltaTime, float vehicleAngle, bool plow, int power) {
+	float plowMultiplier = (plow) ? plowfactor : 1.0f;
+	float anglefactor = sin(vehicleAngle * GL_PI / 180);   //1 - w dół, -1 - pod górę
+
+	if (currentSpeed >= 0) {
+		if (anglefactor < 0) {
+			anglefactor += -anglefactor * minanglespeed;
+		}
+		anglefactor += 1;  //0 do góry, 2x w dół
+		maxSpeed *= anglefactor;
+		if (plow && currentSpeed >= maxplowspeedfactor * maxSpeed) {
+			currentSpeed -= accelerationRate * deltaTime * 1 / plowMultiplier * 2.0f * (2 - anglefactor);
+			if (power == -1)
+				currentSpeed -= accelerationRate * deltaTime * 1 / plowMultiplier * 2.0f * (2 - anglefactor);
+			else if (power == 0)
+				currentSpeed -= accelerationRate * deltaTime * 1 / plowMultiplier * (2 - anglefactor);
+		}
+		else if (power == 1) {
+			currentSpeed += accelerationRate * deltaTime * plowMultiplier * anglefactor;
+			if (currentSpeed >= maxSpeed)
+			{
+				currentSpeed = maxSpeed;
+			}
+		}
+		else if (power == -1)
+			currentSpeed -= accelerationRate * deltaTime * 1 / plowMultiplier * 2.0f * (2 - anglefactor);
+		else if (speed > 0) {
+			currentSpeed -= accelerationRate * deltaTime * 1 / plowMultiplier * (2 - anglefactor);
+			if (currentSpeed < 0)
+				currentSpeed = 0;
+		}
+	}
+	else {
+		if (anglefactor > 0) {
+			anglefactor += -anglefactor * minanglespeed;
+		}
+		anglefactor += 1;  //0 do góry, 2x w dół
+		maxSpeed *= (2 - anglefactor);
+		if (plow && currentSpeed <= -maxplowspeedfactor * maxSpeed / 2.0f) {
+			currentSpeed += accelerationRate * deltaTime * 1 / plowMultiplier * 2.0f * anglefactor;
+			if (power == 1)
+				currentSpeed += accelerationRate * deltaTime * 1 / plowMultiplier * 2.0f * anglefactor;
+			else if (power == 0)
+				currentSpeed += accelerationRate * deltaTime * 1 / plowMultiplier * anglefactor;
+		}
+		else if (power == -1) {
+			currentSpeed -= accelerationRate * deltaTime * plowMultiplier * (2 - anglefactor);
+			if (currentSpeed <= -maxSpeed / 2.0f)
+			{
+				currentSpeed = -maxSpeed / 2.0f;
+			}
+		}
+		else if (power == 1)
+			currentSpeed += accelerationRate * deltaTime * 1 / plowMultiplier * 2.0f * anglefactor;
+		else if (speed < 0) {
+			currentSpeed += accelerationRate * deltaTime * 1 / plowMultiplier * anglefactor;
+			if (currentSpeed > 0)
+				currentSpeed = 0;
+		}
+	}
+}
 
 // Reduces a normal vector specified as a set of three coordinates,
 // to a unit normal vector of length one.
@@ -342,15 +412,8 @@ void cross(float x, float z, float size)
 }
 void Update() {
 	if (keyboard.Pressed('W') != -1) {
+		acceleratevehicle(speed, acceleration, maxspeed, elapsed, ursus.get_rotation_x(), plowing, 1);
 		ursus.move(speed * elapsed * sin(ursus.get_rotation_y() * GL_PI / 180), 0, speed * elapsed * sin((ursus.get_rotation_y() + 90) * GL_PI / 180));
-		if (keyboard.Pressed('A') != -1) {
-			ursus.rotate(0, 50.0f * elapsed, 0);
-			//plug.rotate(0, 50.0f * elapsed, 0);
-		}
-		else if (keyboard.Pressed('D') != -1) {
-			ursus.rotate(0, -50.0f * elapsed, 0);
-			//plug.rotate(0, -50.0f * elapsed, 0);
-		}
 		//plug.move(50.0f * elapsed * sin(ursus.get_rotation_y() * GL_PI / 180), 0, 50.0f * elapsed * sin((ursus.get_rotation_y() + 90) * GL_PI / 180));
 		kolopp.rotate_x(speed * elapsed / (kolopp.get_center_y() * scale) * 360);
 		kolopl.rotate_x(speed * elapsed / (kolopl.get_center_y() * scale) * 360);
@@ -358,55 +421,74 @@ void Update() {
 		kolotl.rotate_x(speed * elapsed / (kolotl.get_center_y() * scale) * 360);
 
 		float xrota = atan(25.0f / 60.0f) * 180 / GL_PI;
-		float zrota=atan( -14.0f/60.0f )*180/GL_PI;
+		float zrota = atan(-14.0f / 60.0f) * 180 / GL_PI;
 		float px, py, pz;
 		ursus.get_relative_position(px, py, pz, pipe_distance, xrota, zrota);
 		for (int i = 0; i < gestosc; i++)
 			if (dym[i].if_dead())
 				dym[i] = particle(px, py, pz, true, false);
 
-		if (!plug.if_unmounted() && plug.get_rotation_x() < 5) {
-			float xrot = -80;// pole
-			float zrot = 0;
-			float dist = 2.2 * scale;
-			float px, py, pz;
-			ursus.get_relative_position(px, py, pz, dist, xrot, zrot);
-			if (pole.plow(terrain.get_indexes(px, pz)))
-				for (int i = 0; i < gestosc_ziemi; i++)
-					if (ziemia[i].if_dead())
-						ziemia[i] = particle(px, py, pz, false, false, 150, -750, 0.3, 5, 0.28f, 0.13f, 0.02f);
-		}
 	}
 	else if (keyboard.Pressed('S') != -1) {
-		ursus.move(-speed * elapsed * sin(ursus.get_rotation_y() * GL_PI / 180), 0, -speed * elapsed * sin((ursus.get_rotation_y() + 90) * GL_PI / 180));
-		if (keyboard.Pressed('A') != -1) {
-			ursus.rotate(0, -50.0f * elapsed, 0);
-			//plug.rotate(0, -50.0f * elapsed, 0);
-		}
-		else if (keyboard.Pressed('D') != -1) {
-			ursus.rotate(0, 50.0f * elapsed, 0);
-			//plug.rotate(0, 50.0f * elapsed, 0);
-		}
+		acceleratevehicle(speed, acceleration, maxspeed, elapsed, ursus.get_rotation_x(), plowing, -1);
+		ursus.move(speed * elapsed * sin(ursus.get_rotation_y() * GL_PI / 180), 0, speed * elapsed * sin((ursus.get_rotation_y() + 90) * GL_PI / 180));
 		//plug.move(-50.0f * elapsed * sin(ursus.get_rotation_y() * GL_PI / 180), 0, -50.0f * elapsed * sin((ursus.get_rotation_y() + 90) * GL_PI / 180));
-		kolopp.rotate_x(-speed * elapsed / (kolopp.get_center_y() * scale) * 360);
-		kolopl.rotate_x(-speed * elapsed / (kolopl.get_center_y() * scale) * 360);
-		kolotp.rotate_x(-speed * elapsed / (kolotp.get_center_y() * scale) * 360);
-		kolotl.rotate_x(-speed * elapsed / (kolotl.get_center_y() * scale) * 360);
+		kolopp.rotate_x(speed * elapsed / (kolopp.get_center_y() * scale) * 360);
+		kolopl.rotate_x(speed * elapsed / (kolopl.get_center_y() * scale) * 360);
+		kolotp.rotate_x(speed * elapsed / (kolotp.get_center_y() * scale) * 360);
+		kolotl.rotate_x(speed * elapsed / (kolotl.get_center_y() * scale) * 360);
 		float xrota = atan(25.0f / 60.0f) * 180 / GL_PI;
 		float zrota = atan(-14.0f / 60.0f) * 180 / GL_PI;
 		float px, py, pz;
 		ursus.get_relative_position(px, py, pz, pipe_distance, xrota, zrota);
 		for (int i = 0; i < gestosc; i++)
 			if (dym[i].if_dead())
-				dym[i] = particle(px, py, pz);
+				dym[i] = particle(px, py, pz, true, false);
 	}
+	else {
+		acceleratevehicle(speed, acceleration, maxspeed, elapsed, ursus.get_rotation_x(), plowing, 0);
+		ursus.move(speed * elapsed * sin(ursus.get_rotation_y() * GL_PI / 180), 0, speed * elapsed * sin((ursus.get_rotation_y() + 90) * GL_PI / 180));
+		kolopp.rotate_x(speed * elapsed / (kolopp.get_center_y() * scale) * 360);
+		kolopl.rotate_x(speed * elapsed / (kolopl.get_center_y() * scale) * 360);
+		kolotp.rotate_x(speed * elapsed / (kolotp.get_center_y() * scale) * 360);
+		kolotl.rotate_x(speed * elapsed / (kolotl.get_center_y() * scale) * 360);
+	}
+	if (!plug.if_unmounted() && plug.get_rotation_x() < 5 && speed > 5) {
+		float xrot = -80;// pole
+		float zrot = 0;
+		float dist = 2.2 * scale;
+		float px, py, pz;
+		ursus.get_relative_position(px, py, pz, dist, xrot, zrot);
+		if (pole.plow(terrain.get_indexes(px, pz))) {
+			for (int i = 0; i < gestosc_ziemi; i++)
+				if (ziemia[i].if_dead())
+					ziemia[i] = particle(px, py, pz, false, false, 150, -750, 0.3, 5, 0.28f, 0.13f, 0.02f);
+			plowing = true;
+		}
+		else
+			plowing = false;
+	}
+	else
+		plowing = false;
 	if (keyboard.Pressed('A') != -1) {
 		kolopp.set_rotate_y(45);
 		kolopl.set_rotate_y(45);
+		if (speed > 0) {
+			ursus.rotate(0, 50.0f * elapsed, 0);
+		}
+		else if (speed < 0) {
+			ursus.rotate(0, -50.0f * elapsed, 0);
+		}
 	}
 	else if (keyboard.Pressed('D') != -1) {
 		kolopp.set_rotate_y(-45);
 		kolopl.set_rotate_y(-45);
+		if (speed > 0) {
+			ursus.rotate(0, -50.0f * elapsed, 0);
+		}
+		else if (speed < 0) {
+			ursus.rotate(0, 50.0f * elapsed, 0);
+		}
 	}
 	else if (keyboard.Pressed('Q') != -1 && !keyboard.switched('Q')) {
 		ursus.rotate(0, 90, 0);
@@ -598,8 +680,6 @@ void SetDCPixelFormat(HDC hDC)
 	// Set the pixel format for the device context
 	SetPixelFormat(hDC, nPixelFormat, &pfd);
 }
-
-
 
 // If necessary, creates a 3-3-2 palette for the device context listed.
 HPALETTE GetOpenGLPalette(HDC hDC)
@@ -972,7 +1052,3 @@ LRESULT CALLBACK WndProc(HWND    hWnd,
 	return (0L);
 }
 
-
-
-
-// Dialog procedure.
