@@ -7,7 +7,7 @@ bool Pole::plow(int const* wierzcholki_v) {
 		for (int i = 0; i < current; i++) {
 			if (wierzcholki[i][0] == wierzcholki_v[0] && wierzcholki[i][1] == wierzcholki_v[1] && wierzcholki[i][2] == wierzcholki_v[2] && wierzcholki[i][3] == wierzcholki_v[3])
 				return true;
-			float mini= (*teren)[wierzcholki_v[0]].y, maks= (*teren)[wierzcholki_v[0]].y;
+			float mini = (*teren)[wierzcholki_v[0]].y, maks = (*teren)[wierzcholki_v[0]].y;
 			for (int i = 0; i < 4; i++) {
 				if (mini > (*teren)[wierzcholki_v[i]].y)
 					mini = (*teren)[wierzcholki_v[i]].y;
@@ -47,7 +47,7 @@ void Pole::update(float elapsed) {
 void Pole::draw() {
 	for (int i = 0; i < current; i++) {
 		float age = 1 - (lifespan[i] / max_lifespan);  //0 - new,  1- old 
-		glColor3f(0.28f-0.20* age, 0.13f+0.8* age, 0.02f-0.01* age);
+		glColor3f(0.28f - 0.20 * age, 0.13f + 0.8 * age, 0.02f - 0.01 * age);
 		//glColor3f(1.0f,1.0f,1.0f);
 
 		glEnable(GL_TEXTURE_2D);
@@ -66,7 +66,7 @@ void Pole::draw() {
 		glDisableClientState(GL_TEXTURE_COORD_ARRAY);
 		glDisable(GL_TEXTURE_2D);
 
-		
+
 	}
 
 }

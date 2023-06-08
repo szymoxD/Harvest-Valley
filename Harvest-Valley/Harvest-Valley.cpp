@@ -93,6 +93,7 @@ int fps = 60;
 bool quit = false;
 bool plowing = false;
 bool firstcam = true;
+float wheel_angle = 20;
 float speed = 0;
 float maxspeed = 250;
 float powerfactor = 1;  //zwieksza acc, plow acc, maxplow speed, spowolnienie pod górkę
@@ -101,10 +102,10 @@ float minanglespeed = 1.0f - 1.0f / powerfactor; //pow 1 - 45 deg=0 ruchu      0
 float acceleration = 50 + 15 * (powerfactor - 1); //od 50 do niesk
 float plowfactor = 0.5 + 0.5f * (1.0f - 1.0f / powerfactor);   //od 0,5 do 1 dla powerfactor od 1 do niesk
 
-float wheelspan = 0.0;
-float pipe_distance;
+float wheelspan = 0.0;  //rozstaw kół wzdłóż
+float pipe_distance;  //odl wydechu
 float test = 0;
-float axelspan = 0.0;
+float axelspan = 0.0;	//rozstaw kół w szerz
 float angle;
 Keyboard keyboard;
 
@@ -471,24 +472,14 @@ void Update() {
 	else
 		plowing = false;
 	if (keyboard.Pressed('A') != -1) {
-		kolopp.set_rotate_y(45);
-		kolopl.set_rotate_y(45);
-		if (speed > 0) {
-			ursus.rotate(0, 50.0f * elapsed, 0);
-		}
-		else if (speed < 0) {
-			ursus.rotate(0, -50.0f * elapsed, 0);
-		}
+		kolopp.set_rotate_y(wheel_angle);
+		kolopl.set_rotate_y(wheel_angle);
+		ursus.rotate(0, speed * elapsed / (2 * GL_PI * wheelspan / sin(wheel_angle * GL_PI / 180)) * 360, 0); //obrót po okręgu skrętu
 	}
 	else if (keyboard.Pressed('D') != -1) {
-		kolopp.set_rotate_y(-45);
-		kolopl.set_rotate_y(-45);
-		if (speed > 0) {
-			ursus.rotate(0, -50.0f * elapsed, 0);
-		}
-		else if (speed < 0) {
-			ursus.rotate(0, 50.0f * elapsed, 0);
-		}
+		kolopp.set_rotate_y(-wheel_angle);
+		kolopl.set_rotate_y(-wheel_angle);
+		ursus.rotate(0, -speed * elapsed / (2 * GL_PI * wheelspan / sin(wheel_angle * GL_PI / 180)) * 360, 0);
 	}
 	else if (keyboard.Pressed('Q') != -1 && !keyboard.switched('Q')) {
 		ursus.rotate(0, 90, 0);
@@ -920,9 +911,9 @@ LRESULT CALLBACK WndProc(HWND    hWnd,
 		pole.loadBMP_custom("../obj/szopa_texture.bmp");
 
 		wheelspan = kolopp.get_absolute_position_z() * sin((ursus.get_rotation_y() + 90) * 3.14159 / 180)
-			+ kolotp.get_absolute_position_z() * sin((ursus.get_rotation_y() + 90) * 3.14159 / 180);
-		axelspan = -kolotl.get_absolute_position_x() * sin((ursus.get_rotation_y() + 90) * 3.14159 / 180);
-		pipe_distance = sqrt(14 * 14 + 60 * 60 + 25 * 25);
+			+ kolotp.get_absolute_position_z() * sin((ursus.get_rotation_y() + 90) * 3.14159 / 180);//rozstaw w długości
+		axelspan = -kolotl.get_absolute_position_x() * sin((ursus.get_rotation_y() + 90) * 3.14159 / 180);//rozstaw w szerokości kól
+		pipe_distance = sqrt(14 * 14 + 60 * 60 + 25 * 25); //odl wydechu
 		break;
 
 		// Window is being destroyed, cleanup
