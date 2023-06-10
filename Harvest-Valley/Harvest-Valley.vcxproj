@@ -143,6 +143,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Collision.cpp" />
     <ClCompile Include="Harvest-Valley.cpp" />
     <ClCompile Include="Keyboard.cpp" />
     <ClCompile Include="Obiekt.cpp" />
@@ -151,6 +152,7 @@
     <ClCompile Include="Teren.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Collision.h" />
     <ClInclude Include="Keyboard.h" />
     <ClInclude Include="Obiekt.h" />
     <ClInclude Include="particle.h" />

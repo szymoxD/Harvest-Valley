@@ -32,6 +32,7 @@ public:
 	void mount(const Obiekt&);
 	void unmount();
 	bool if_unmounted() { return mounted == nullptr; }
+	bool to_mount(const Obiekt& ob) { return abs(pos.x - ob.get_position_x()) < 10 && abs(pos.y - ob.get_position_y()) < 10 && abs(pos.z - ob.get_position_z()) < 10; }
 	void set_rotate(float x, float y = 0.0f, float z = 0.0f);
 	void rotate(float x, float y = 0.0f, float z = 0.0f);
 	void set_rotate_x(float x) { rot.x = x; normalize_rotation(); }
@@ -52,9 +53,9 @@ public:
 	float get_position_x()const { return pos.x; }
 	float get_position_y()const { return pos.y; }
 	float get_position_z()const { return pos.z; }
-	float get_absolute_position_x()const { if (mounted != nullptr)return pos.x + mounted->get_position_x() + center.z * sin(mounted->get_rotation_y() * 3.14159 / 180) + center.x * sin((mounted->get_rotation_y() + 90) * 3.14159 / 180); return pos.x + center.x; }
+	float get_absolute_position_x(float offx = 0, float offz = 0)const { if (mounted != nullptr)return pos.x + mounted->get_position_x() + (center.z + offz) * sin(mounted->get_rotation_y() * 3.14159 / 180) + (center.x + offx) * sin((mounted->get_rotation_y() + 90) * 3.14159 / 180); return pos.x + (center.x + offx) * sin((get_rotation_y() + 90) * 3.14159 / 180) + (center.z + offz) * sin(get_rotation_y() * 3.14159 / 180); }
 	float get_absolute_position_y()const { if (mounted != nullptr)return pos.y + mounted->get_position_y() + center.y; return pos.y + center.y; }
-	float get_absolute_position_z()const { if (mounted != nullptr)return pos.z + mounted->get_position_z() + center.z * sin((mounted->get_rotation_y() + 90) * 3.14159 / 180) - center.x * sin(mounted->get_rotation_y() * 3.14159 / 180); return pos.z + center.z; }
+	float get_absolute_position_z(float offx = 0, float offz = 0)const { if (mounted != nullptr)return pos.z + mounted->get_position_z() + (center.z + offz) * sin((mounted->get_rotation_y() + 90) * 3.14159 / 180) - (center.x + offx) * sin(mounted->get_rotation_y() * 3.14159 / 180); return pos.z + (center.z + offz) * sin((get_rotation_y() + 90) * 3.14159 / 180) - (center.x + offx) * sin(get_rotation_y() * 3.14159 / 180); }
 	GLfloat* va() { return vertexArray; }
 	std::vector< glm::vec3 > ver() { return vertices; }
 	GLuint loadBMP_custom(const char* imagepath);

@@ -36,6 +36,7 @@
 #include "pole.h"
 #include "particle.h"
 #include <ctime>
+#include "Collision.h"
 
 #define glRGB(x, y, z)	glColor3ub((GLubyte)x, (GLubyte)y, (GLubyte)z)
 #define BITMAP_ID 0x4D42		// identyfikator formatu BMP
@@ -73,6 +74,8 @@ void SetDCPixelFormat(HDC hDC);
 //deklaracje
 float scale = 20.0f;
 
+Collision collision;
+Obiekt szopa("../obj/szopa.obj", scale, nullptr, 0, 0, 0, 0, 0, 0);
 Obiekt ursus("../obj/tractor.obj", scale, nullptr, 0, 0, 0, 0, 0, 0);
 Obiekt plug("../obj/plug.obj", scale, &ursus, 0, 0, 0, 0, 0, 0, 0, 1.2988, -0.772357);
 Obiekt kolotl("../obj/kolo_duze_l.obj", scale, &ursus, 0, 0, 0, 0, 0, 0, 1.02619, 0.916822, 0);
@@ -81,8 +84,10 @@ Obiekt kolopl("../obj/kolo_male_l.obj", scale, &ursus, 0, 0, 0, 0, 0, 0, 0.91496
 Obiekt kolopp("../obj/kolo_male_p.obj", scale, &ursus, 0, 0, 0, 0, 0, 0, -0.914969, 0.42519, 2.69381);   //x=x,  z=-y 
 Teren terrain("../obj/terrain.obj", scale, nullptr, 0, 0, 0, 0, -5, 0);
 Obiekt ursus_pokaz("../obj/full_tractor.obj", scale, nullptr, 0, 0, 0, -80, 0, 0);
-Obiekt szopa("../obj/szopa.obj", scale, nullptr, 0, 0, 0, 0, 0, 0);
+
 Obiekt tree("../obj/tree.obj", scale, nullptr, 0, 0, 0, 2000, 0, 2000);
+Obiekt tree2("../obj/tree.obj", scale, nullptr, 0, 0, 0, 500, 0, -1000);
+Obiekt tree3("../obj/tree.obj", scale, nullptr, 0, 0, 0, -1500, 0, 0);
 Pole pole(&terrain);
 const int gestosc = 50000;
 const int gestosc_ziemi = 100;
@@ -413,46 +418,67 @@ void cross(float x, float z, float size)
 }
 void Update() {
 	if (keyboard.Pressed('W') != -1) {
-		acceleratevehicle(speed, acceleration, maxspeed, elapsed, ursus.get_rotation_x(), plowing, 1);
 		ursus.move(speed * elapsed * sin(ursus.get_rotation_y() * GL_PI / 180), 0, speed * elapsed * sin((ursus.get_rotation_y() + 90) * GL_PI / 180));
-		//plug.move(50.0f * elapsed * sin(ursus.get_rotation_y() * GL_PI / 180), 0, 50.0f * elapsed * sin((ursus.get_rotation_y() + 90) * GL_PI / 180));
-		kolopp.rotate_x(speed * elapsed / (kolopp.get_center_y() * scale) * 360);
-		kolopl.rotate_x(speed * elapsed / (kolopl.get_center_y() * scale) * 360);
-		kolotp.rotate_x(speed * elapsed / (kolotp.get_center_y() * scale) * 360);
-		kolotl.rotate_x(speed * elapsed / (kolotl.get_center_y() * scale) * 360);
+		if (collision.collide({ kolotp.get_absolute_position_x(-7,-20 - 50 * !plug.if_unmounted()), kolotp.get_absolute_position_y(),kolotp.get_absolute_position_z(-7,-20 - 50 * !plug.if_unmounted()),kolotl.get_absolute_position_x(7,-20 - 50 * !plug.if_unmounted()), kolotl.get_absolute_position_y(),kolotl.get_absolute_position_z(7,-20 - 50 * !plug.if_unmounted()),
+								kolopp.get_absolute_position_x(-2,8), kolopp.get_absolute_position_y(),kolopp.get_absolute_position_z(-2,8), kolopl.get_absolute_position_x(2,8), kolopl.get_absolute_position_y(),kolopl.get_absolute_position_z(2,8) }, ursus.get_rotation_y())) {
+			ursus.move(-speed * elapsed * sin(ursus.get_rotation_y() * GL_PI / 180), 0, -speed * elapsed * sin((ursus.get_rotation_y() + 90) * GL_PI / 180));
+			speed = 0;
+		}
+		else {
+			acceleratevehicle(speed, acceleration, maxspeed, elapsed, ursus.get_rotation_x(), plowing, 1);
+			//plug.move(50.0f * elapsed * sin(ursus.get_rotation_y() * GL_PI / 180), 0, 50.0f * elapsed * sin((ursus.get_rotation_y() + 90) * GL_PI / 180));
+			kolopp.rotate_x(speed * elapsed / (kolopp.get_center_y() * scale) * 360);
+			kolopl.rotate_x(speed * elapsed / (kolopl.get_center_y() * scale) * 360);
+			kolotp.rotate_x(speed * elapsed / (kolotp.get_center_y() * scale) * 360);
+			kolotl.rotate_x(speed * elapsed / (kolotl.get_center_y() * scale) * 360);
 
-		float xrota = atan(25.0f / 60.0f) * 180 / GL_PI;
-		float zrota = atan(-14.0f / 60.0f) * 180 / GL_PI;
-		float px, py, pz;
-		ursus.get_relative_position(px, py, pz, pipe_distance, xrota, zrota);
-		for (int i = 0; i < gestosc; i++)
-			if (dym[i].if_dead())
-				dym[i] = particle(px, py, pz, true, false);
+			float xrota = atan(25.0f / 60.0f) * 180 / GL_PI;
+			float zrota = atan(-14.0f / 60.0f) * 180 / GL_PI;
+			float px, py, pz;
+			ursus.get_relative_position(px, py, pz, pipe_distance, xrota, zrota);
+			for (int i = 0; i < gestosc; i++)
+				if (dym[i].if_dead())
+					dym[i] = particle(px, py, pz, true, false);
+		}
 
 	}
 	else if (keyboard.Pressed('S') != -1) {
-		acceleratevehicle(speed, acceleration, maxspeed, elapsed, ursus.get_rotation_x(), plowing, -1);
 		ursus.move(speed * elapsed * sin(ursus.get_rotation_y() * GL_PI / 180), 0, speed * elapsed * sin((ursus.get_rotation_y() + 90) * GL_PI / 180));
-		//plug.move(-50.0f * elapsed * sin(ursus.get_rotation_y() * GL_PI / 180), 0, -50.0f * elapsed * sin((ursus.get_rotation_y() + 90) * GL_PI / 180));
-		kolopp.rotate_x(speed * elapsed / (kolopp.get_center_y() * scale) * 360);
-		kolopl.rotate_x(speed * elapsed / (kolopl.get_center_y() * scale) * 360);
-		kolotp.rotate_x(speed * elapsed / (kolotp.get_center_y() * scale) * 360);
-		kolotl.rotate_x(speed * elapsed / (kolotl.get_center_y() * scale) * 360);
-		float xrota = atan(25.0f / 60.0f) * 180 / GL_PI;
-		float zrota = atan(-14.0f / 60.0f) * 180 / GL_PI;
-		float px, py, pz;
-		ursus.get_relative_position(px, py, pz, pipe_distance, xrota, zrota);
-		for (int i = 0; i < gestosc; i++)
-			if (dym[i].if_dead())
-				dym[i] = particle(px, py, pz, true, false);
+		if (collision.collide({ kolotp.get_absolute_position_x(-7,-20 - 50 * !plug.if_unmounted()), kolotp.get_absolute_position_y(),kolotp.get_absolute_position_z(-7,-20 - 50 * !plug.if_unmounted()),kolotl.get_absolute_position_x(7,-20 - 50 * !plug.if_unmounted()), kolotl.get_absolute_position_y(),kolotl.get_absolute_position_z(7,-20 - 50 * !plug.if_unmounted()),
+								kolopp.get_absolute_position_x(-2,8), kolopp.get_absolute_position_y(),kolopp.get_absolute_position_z(-2,8), kolopl.get_absolute_position_x(2,8), kolopl.get_absolute_position_y(),kolopl.get_absolute_position_z(2,8) }, ursus.get_rotation_y())) {
+			ursus.move(-speed * elapsed * sin(ursus.get_rotation_y() * GL_PI / 180), 0, -speed * elapsed * sin((ursus.get_rotation_y() + 90) * GL_PI / 180));
+			speed = 0;
+		}
+		else {
+			acceleratevehicle(speed, acceleration, maxspeed, elapsed, ursus.get_rotation_x(), plowing, -1);
+			//plug.move(-50.0f * elapsed * sin(ursus.get_rotation_y() * GL_PI / 180), 0, -50.0f * elapsed * sin((ursus.get_rotation_y() + 90) * GL_PI / 180));
+			kolopp.rotate_x(speed * elapsed / (kolopp.get_center_y() * scale) * 360);
+			kolopl.rotate_x(speed * elapsed / (kolopl.get_center_y() * scale) * 360);
+			kolotp.rotate_x(speed * elapsed / (kolotp.get_center_y() * scale) * 360);
+			kolotl.rotate_x(speed * elapsed / (kolotl.get_center_y() * scale) * 360);
+			float xrota = atan(25.0f / 60.0f) * 180 / GL_PI;
+			float zrota = atan(-14.0f / 60.0f) * 180 / GL_PI;
+			float px, py, pz;
+			ursus.get_relative_position(px, py, pz, pipe_distance, xrota, zrota);
+			for (int i = 0; i < gestosc; i++)
+				if (dym[i].if_dead())
+					dym[i] = particle(px, py, pz, true, false);
+		}
 	}
 	else {
-		acceleratevehicle(speed, acceleration, maxspeed, elapsed, ursus.get_rotation_x(), plowing, 0);
 		ursus.move(speed * elapsed * sin(ursus.get_rotation_y() * GL_PI / 180), 0, speed * elapsed * sin((ursus.get_rotation_y() + 90) * GL_PI / 180));
-		kolopp.rotate_x(speed * elapsed / (kolopp.get_center_y() * scale) * 360);
-		kolopl.rotate_x(speed * elapsed / (kolopl.get_center_y() * scale) * 360);
-		kolotp.rotate_x(speed * elapsed / (kolotp.get_center_y() * scale) * 360);
-		kolotl.rotate_x(speed * elapsed / (kolotl.get_center_y() * scale) * 360);
+		if (collision.collide({ kolotp.get_absolute_position_x(-7,-20 - 50 * !plug.if_unmounted()), kolotp.get_absolute_position_y(),kolotp.get_absolute_position_z(-7,-20 - 50 * !plug.if_unmounted()),kolotl.get_absolute_position_x(7,-20 - 50 * !plug.if_unmounted()), kolotl.get_absolute_position_y(),kolotl.get_absolute_position_z(7,-20 - 50 * !plug.if_unmounted()),
+								kolopp.get_absolute_position_x(-2,8), kolopp.get_absolute_position_y(),kolopp.get_absolute_position_z(-2,8), kolopl.get_absolute_position_x(2,8), kolopl.get_absolute_position_y(),kolopl.get_absolute_position_z(2,8) }, ursus.get_rotation_y())) {
+			ursus.move(-speed * elapsed * sin(ursus.get_rotation_y() * GL_PI / 180), 0, -speed * elapsed * sin((ursus.get_rotation_y() + 90) * GL_PI / 180));
+			speed = 0;
+		}
+		else {
+			acceleratevehicle(speed, acceleration, maxspeed, elapsed, ursus.get_rotation_x(), plowing, 0);
+			kolopp.rotate_x(speed * elapsed / (kolopp.get_center_y() * scale) * 360);
+			kolopl.rotate_x(speed * elapsed / (kolopl.get_center_y() * scale) * 360);
+			kolotp.rotate_x(speed * elapsed / (kolotp.get_center_y() * scale) * 360);
+			kolotl.rotate_x(speed * elapsed / (kolotl.get_center_y() * scale) * 360);
+		}
 	}
 	if (!plug.if_unmounted() && plug.get_rotation_x() < 5 && speed > 5) {
 		float xrot = -80;// pole
@@ -475,11 +501,18 @@ void Update() {
 		kolopp.set_rotate_y(wheel_angle);
 		kolopl.set_rotate_y(wheel_angle);
 		ursus.rotate(0, speed * elapsed / (2 * GL_PI * wheelspan / sin(wheel_angle * GL_PI / 180)) * 360, 0); //obrót po okręgu skrętu
+		if (collision.collide({ kolotp.get_absolute_position_x(-7,-20 - 50 * !plug.if_unmounted()), kolotp.get_absolute_position_y(),kolotp.get_absolute_position_z(-7,-20 - 50 * !plug.if_unmounted()),kolotl.get_absolute_position_x(7,-20 - 50 * !plug.if_unmounted()), kolotl.get_absolute_position_y(),kolotl.get_absolute_position_z(7,-20 - 50 * !plug.if_unmounted()),
+								kolopp.get_absolute_position_x(-2,8), kolopp.get_absolute_position_y(),kolopp.get_absolute_position_z(-2,8), kolopl.get_absolute_position_x(2,8), kolopl.get_absolute_position_y(),kolopl.get_absolute_position_z(2,8) }, ursus.get_rotation_y()))
+			ursus.rotate(0, -speed * elapsed / (2 * GL_PI * wheelspan / sin(wheel_angle * GL_PI / 180)) * 360, 0); //obrót po okręgu skrętu
+
 	}
 	else if (keyboard.Pressed('D') != -1) {
 		kolopp.set_rotate_y(-wheel_angle);
 		kolopl.set_rotate_y(-wheel_angle);
 		ursus.rotate(0, -speed * elapsed / (2 * GL_PI * wheelspan / sin(wheel_angle * GL_PI / 180)) * 360, 0);
+		if (collision.collide({ kolotp.get_absolute_position_x(-7,-20 - 50 * !plug.if_unmounted()), kolotp.get_absolute_position_y(),kolotp.get_absolute_position_z(-7,-20 - 50 * !plug.if_unmounted()),kolotl.get_absolute_position_x(7,-20 - 50 * !plug.if_unmounted()), kolotl.get_absolute_position_y(),kolotl.get_absolute_position_z(7,-20 - 50 * !plug.if_unmounted()),
+								kolopp.get_absolute_position_x(-2,8), kolopp.get_absolute_position_y(),kolopp.get_absolute_position_z(-2,8), kolopl.get_absolute_position_x(2,8), kolopl.get_absolute_position_y(),kolopl.get_absolute_position_z(2,8) }, ursus.get_rotation_y()))
+			ursus.rotate(0, speed * elapsed / (2 * GL_PI * wheelspan / sin(wheel_angle * GL_PI / 180)) * 360, 0); //obrót po okręgu skrętu
 	}
 	else if (keyboard.Pressed('Q') != -1 && !keyboard.switched('Q')) {
 		ursus.rotate(0, 90, 0);
@@ -498,12 +531,18 @@ void Update() {
 			plug.rotate_x(-5);
 	}
 	if (keyboard.Pressed('K') != -1) {
-		if (!plug.if_unmounted())
+		if (!plug.if_unmounted()) {
 			plug.unmount();
+			collision.addcircle({ plug.get_absolute_position_x(0,-30), plug.get_absolute_position_y(), plug.get_absolute_position_z(0,-30), 30 });
+		}
 	}
 	else if (keyboard.Pressed('L') != -1) {
-		if (plug.if_unmounted())
+		if (plug.if_unmounted()) {
+			if (plug.to_mount(ursus))
+				collision.popcircle({ plug.get_absolute_position_x(0,-30), plug.get_absolute_position_y(), plug.get_absolute_position_z(0,-30), 30 });
 			plug.mount(ursus);
+
+		}
 	}
 	else if (keyboard.Pressed('F') != -1 && !keyboard.switched('F')) {
 		firstcam = !firstcam;
@@ -599,11 +638,13 @@ void RenderScene(void)
 	//ursus.set_position(ursus.get_position_x(), 0, ursus.get_position_z());
 	glColor3f(0.5f, 0.5f, 0.5f);
 	tree.draw();
+	tree2.draw();
+	tree3.draw();
 	plug.draw();
-	cross(0, 0, 40);
+	//cross(plug.get_absolute_position_x(0, -30), plug.get_absolute_position_z(0, -30), 30);
 	szopa.draw();
 	glColor3f(0.4, 0.4, 0.4);
-	ursus_pokaz.draw();
+	//ursus_pokaz.draw();
 	ursus.draw();
 	glColor3f(0.3, 0.3, 0.3);
 	kolotl.draw();
@@ -904,16 +945,30 @@ LRESULT CALLBACK WndProc(HWND    hWnd,
 		terrain.loadBMP_custom("../obj/terrain_material.bmp");
 		ursus.loadBMP_custom("../obj/tractor_texture.bmp");
 		tree.loadBMP_custom("../obj/tree_texture.bmp");
+		tree2.loadBMP_custom("../obj/tree_texture.bmp");
+		tree3.loadBMP_custom("../obj/tree_texture.bmp");
 		kolopp.loadBMP_custom("../obj/kola_texture.bmp");
 		kolopl.loadBMP_custom("../obj/kola_texture.bmp");
 		kolotp.loadBMP_custom("../obj/kola_texture.bmp");
 		kolotl.loadBMP_custom("../obj/kola_texture.bmp");
 		pole.loadBMP_custom("../obj/szopa_texture.bmp");
+		collision.addsquare({ szopa.get_position_x() - 7.14f * scale,0,szopa.get_position_z() + 4.23f * scale,szopa.get_position_x() - 6.94f * scale,0,szopa.get_position_z() + 4.23f * scale,
+							  szopa.get_position_x() - 7.14f * scale,0,szopa.get_position_z() - 5.76f * scale,szopa.get_position_x() - 6.94f * scale,0,szopa.get_position_z() - 5.76f * scale });
+		collision.addsquare({ szopa.get_position_x() + 3.05f * scale,0,szopa.get_position_z() + 4.23f * scale,szopa.get_position_x() + 2.85f * scale,0,szopa.get_position_z() + 4.23f * scale,
+							  szopa.get_position_x() + 3.05f * scale,0,szopa.get_position_z() - 5.76f * scale,szopa.get_position_x() + 2.85f * scale,0,szopa.get_position_z() - 5.76f * scale });
+		collision.addsquare({ szopa.get_position_x() - 7.04f * scale,0,szopa.get_position_z() - 5.66f * scale,szopa.get_position_x() - 7.04f * scale,0,szopa.get_position_z() - 5.86f * scale,
+							  szopa.get_position_x() + 2.95f * scale,0,szopa.get_position_z() - 5.66f * scale,szopa.get_position_x() + 2.95f * scale,0,szopa.get_position_z() - 5.86f * scale });
+		collision.addcircle({ tree.get_position_x(),0, tree.get_position_z(),9 * scale });
+		collision.addcircle({ tree2.get_position_x(),0, tree2.get_position_z(),9 * scale });
+		collision.addcircle({ tree3.get_position_x(),0, tree3.get_position_z(),9 * scale });
 
-		wheelspan = kolopp.get_absolute_position_z() * sin((ursus.get_rotation_y() + 90) * 3.14159 / 180)
-			+ kolotp.get_absolute_position_z() * sin((ursus.get_rotation_y() + 90) * 3.14159 / 180);//rozstaw w długości
-		axelspan = -kolotl.get_absolute_position_x() * sin((ursus.get_rotation_y() + 90) * 3.14159 / 180);//rozstaw w szerokości kól
+		wheelspan = kolopp.get_center_z() * sin((ursus.get_rotation_y() + 90) * 3.14159 / 180)
+			+ kolotp.get_center_z() * sin((ursus.get_rotation_y() + 90) * 3.14159 / 180);//rozstaw w długości
+		axelspan = -kolotl.get_center_x() * sin((ursus.get_rotation_y() + 90) * 3.14159 / 180);//rozstaw w szerokości kól
 		pipe_distance = sqrt(14 * 14 + 60 * 60 + 25 * 25); //odl wydechu
+		if (plug.if_unmounted()) {
+			collision.addcircle({ plug.get_absolute_position_x(0,-30), plug.get_absolute_position_y(), plug.get_absolute_position_z(0,-30), 30 });
+		}
 		break;
 
 		// Window is being destroyed, cleanup
