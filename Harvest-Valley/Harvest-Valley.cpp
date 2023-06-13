@@ -621,6 +621,10 @@ void Update() {
 		if (money >= powercost) {
 			money -= powercost;
 			powerfactor += 0.5;
+			maxplowspeedfactor = 0.4f + 0.6f * (1.0f - 1.0f / powerfactor);  //od 0,4 do 1 dla powerfactor od 1 do niesk
+			minanglespeed = 1.0f - 1.0f / powerfactor; //pow 1 - 45 deg=0 ruchu      0 min  1 max
+			acceleration = 50 + 15 * (powerfactor - 1); //od 50 do niesk
+			plowfactor = 0.5 + 0.5f * (1.0f - 1.0f / powerfactor);   //od 0,5 do 1 dla powerfactor od 1 do niesk
 			powercost *= 1.2;
 		}
 		keyboard.block('1');
