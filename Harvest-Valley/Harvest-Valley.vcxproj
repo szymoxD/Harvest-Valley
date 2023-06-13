@@ -117,11 +117,12 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)glm</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)linking\include;$(SolutionDir)glm</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>$(SolutionDir)linking\lib\freetype\freetype.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -149,7 +150,9 @@
     <ClCompile Include="Obiekt.cpp" />
     <ClCompile Include="particle.cpp" />
     <ClCompile Include="Pole.cpp" />
+    <ClCompile Include="tekst.cpp" />
     <ClCompile Include="Teren.cpp" />
+    <ClCompile Include="znak.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Collision.h" />
@@ -158,7 +161,9 @@
     <ClInclude Include="particle.h" />
     <ClInclude Include="Pole.h" />
     <ClInclude Include="resource.h" />
+    <ClInclude Include="tekst.h" />
     <ClInclude Include="Teren.h" />
+    <ClInclude Include="znak.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

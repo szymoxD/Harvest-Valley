@@ -37,6 +37,9 @@
 #include "particle.h"
 #include <ctime>
 #include "Collision.h"
+#include <map>
+#include "tekst.h"
+#include FT_COLOR_H
 
 #define glRGB(x, y, z)	glColor3ub((GLubyte)x, (GLubyte)y, (GLubyte)z)
 #define BITMAP_ID 0x4D42		// identyfikator formatu BMP
@@ -121,6 +124,15 @@ Keyboard keyboard;
 clock_t delay = 1.0f / (float)fps * CLOCKS_PER_SEC;
 clock_t last_refresh;
 float elapsed;
+
+
+std::map<char, znak> znaki;
+FT_Library ft;
+FT_Face face;
+
+tekst speedtext("",0.02,0.07);
+tekst moneytext("",0.02, 0.97);
+
 
 void acceleratevehicle(float& currentSpeed, float accelerationRate, float maxSpeed, float deltaTime, float vehicleAngle, bool plow, int power) {
 	float plowMultiplier = (plow) ? plowfactor : 1.0f;
@@ -720,6 +732,41 @@ void RenderScene(void)
 	//Wyrysowanie prostokata:
 	//glRectd(-10.0,-10.0,20.0,20.0);
 
+	glMatrixMode(GL_PROJECTION);
+	glPushMatrix();
+	glLoadIdentity();
+	gluOrtho2D(0, 1, 1, 0);
+	glMatrixMode(GL_MODELVIEW);
+	glPushMatrix();
+	glLoadIdentity();
+
+
+
+	tekst speedtext("", 0.02, 0.07);
+	tekst moneytext("", 0.02, 0.97);
+	//add gui here
+	char b[8] = {}, b2[8] = {};
+	_itoa((int)abs(speed/5), b,10);
+	std::string temp = b;
+	speedtext.setValue("SPD: "+temp);
+	speedtext.draw(znaki);
+	speedtext.drawRect(0.015, 0.015, 0.21, 0.077);
+
+	_itoa((int)abs(money), b2, 10);
+	std::string temp2 = b2;
+	moneytext.setValue("$ "+temp2);
+	moneytext.draw(znaki);
+	speedtext.drawRect(0.015, 0.91, 0.3, 0.97);
+
+
+	glMatrixMode(GL_PROJECTION);
+	glPopMatrix();
+	glMatrixMode(GL_MODELVIEW);
+	glPopMatrix();
+
+
+
+
 	/////////////////////////////////////////////////////////////////
 	/////////////////////////////////////////////////////////////////
 	/////////////////////////////////////////////////////////////////
@@ -1022,6 +1069,63 @@ LRESULT CALLBACK WndProc(HWND    hWnd,
 		if (kosiarka.if_unmounted()) {
 			collision.addcircle({ kosiarka.get_absolute_position_x(0,-30), kosiarka.get_absolute_position_y(), kosiarka.get_absolute_position_z(0,-30), 30 });
 		}
+
+		//font init
+		if (FT_Init_FreeType(&ft))
+			break;
+		if (FT_New_Face(ft, "../fonts/cour.ttf", 0, &face))
+			break;
+		FT_Set_Pixel_Sizes(face, 0, 24);
+		/*FT_Color color;
+		color.alpha = 0;
+		color.blue = 0;
+		color.green = 0;
+		color.red = 0;
+		FT_Palette_Set_Foreground_Color(face, color);*/
+		glPixelStorei(GL_UNPACK_ALIGNMENT, 1); // disable byte-alignment restriction
+
+		for (unsigned char c = 0; c < 128; c++)
+		{
+			// load character glyph 
+			if (FT_Load_Char(face, c, FT_LOAD_RENDER))
+			{
+				continue;
+			}
+			// generate texture
+			unsigned int texture;
+			glGenTextures(1, &texture);
+			glBindTexture(GL_TEXTURE_2D, texture);
+			glTexImage2D(
+				GL_TEXTURE_2D,
+				0,
+				GL_RED,
+				face->glyph->bitmap.width,
+				face->glyph->bitmap.rows,
+				0,
+				GL_RED,
+				GL_UNSIGNED_BYTE,
+				face->glyph->bitmap.buffer
+			);
+			// set texture options
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+			// now store character for later use
+			znak character = {
+				texture,
+				glm::ivec2(face->glyph->bitmap.width, face->glyph->bitmap.rows),
+				glm::ivec2(face->glyph->bitmap_left, face->glyph->bitmap_top),
+				face->glyph->advance.x
+			};
+			znaki.insert(std::pair<char, znak>(c, character));
+		}
+
+
+		FT_Done_Face(face);
+		FT_Done_FreeType(ft);
+
+
 		break;
 
 		// Window is being destroyed, cleanup
