@@ -78,6 +78,8 @@ Collision collision;
 Obiekt szopa("../obj/szopa.obj", scale, nullptr, 0, 0, 0, 0, 0, 0);
 Obiekt ursus("../obj/tractor.obj", scale, nullptr, 0, 0, 0, 0, 0, 0);
 Obiekt plug("../obj/plug.obj", scale, &ursus, 0, 0, 0, 0, 0, 0, 0, 1.2988, -0.772357);
+Obiekt kosiarka("../obj/mower_body.obj", scale, nullptr, 0, 0, 0, -100, 0, 0, 0, 1.2988, -0.772357);
+Obiekt ostrze("../obj/mower_blade.obj", scale, nullptr, 0, 0, 0, -100, 0, 0, 0, 1.2988, -0.772357);
 Obiekt kolotl("../obj/kolo_duze_l.obj", scale, &ursus, 0, 0, 0, 0, 0, 0, 1.02619, 0.916822, 0);
 Obiekt kolotp("../obj/kolo_duze_p.obj", scale, &ursus, 0, 0, 0, 0, 0, 0, -1.02619, 0.916822, 0);
 Obiekt kolopl("../obj/kolo_male_l.obj", scale, &ursus, 0, 0, 0, 0, 0, 0, 0.914969, 0.42519, 2.69381); //origin z blendera dopisany
@@ -89,7 +91,7 @@ Obiekt tree("../obj/tree.obj", scale, nullptr, 0, 0, 0, 2000, 0, 2000);
 Obiekt tree2("../obj/tree.obj", scale, nullptr, 0, 0, 0, 500, 0, -1000);
 Obiekt tree3("../obj/tree.obj", scale, nullptr, 0, 0, 0, -1500, 0, 0);
 Pole pole(&terrain);
-const int gestosc = 50000;
+const int gestosc = 15000;
 const int gestosc_ziemi = 100;
 particle dym[gestosc];
 particle ziemia[gestosc_ziemi];
@@ -100,6 +102,8 @@ bool plowing = false;
 bool firstcam = true;
 float wheel_angle = 20;
 float speed = 0;
+float money = 0;
+float moneymultiplier = 1;
 float maxspeed = 250;
 float powerfactor = 1;  //zwieksza acc, plow acc, maxplow speed, spowolnienie pod górkę
 float maxplowspeedfactor = 0.4f + 0.6f * (1.0f - 1.0f / powerfactor);  //od 0,4 do 1 dla powerfactor od 1 do niesk
@@ -419,7 +423,7 @@ void cross(float x, float z, float size)
 void Update() {
 	if (keyboard.Pressed('W') != -1) {
 		ursus.move(speed * elapsed * sin(ursus.get_rotation_y() * GL_PI / 180), 0, speed * elapsed * sin((ursus.get_rotation_y() + 90) * GL_PI / 180));
-		if (collision.collide({ kolotp.get_absolute_position_x(-7,-20 - 50 * !plug.if_unmounted()), kolotp.get_absolute_position_y(),kolotp.get_absolute_position_z(-7,-20 - 50 * !plug.if_unmounted()),kolotl.get_absolute_position_x(7,-20 - 50 * !plug.if_unmounted()), kolotl.get_absolute_position_y(),kolotl.get_absolute_position_z(7,-20 - 50 * !plug.if_unmounted()),
+		if (collision.collide({ kolotp.get_absolute_position_x(-7,-20 - 50 * (!plug.if_unmounted() || !kosiarka.if_unmounted())), kolotp.get_absolute_position_y(),kolotp.get_absolute_position_z(-7,-20 - 50 * (!plug.if_unmounted() || !kosiarka.if_unmounted())),kolotl.get_absolute_position_x(7,-20 - 50 * (!plug.if_unmounted() || !kosiarka.if_unmounted())), kolotl.get_absolute_position_y(),kolotl.get_absolute_position_z(7,-20 - 50 * (!plug.if_unmounted() || !kosiarka.if_unmounted())),
 								kolopp.get_absolute_position_x(-2,8), kolopp.get_absolute_position_y(),kolopp.get_absolute_position_z(-2,8), kolopl.get_absolute_position_x(2,8), kolopl.get_absolute_position_y(),kolopl.get_absolute_position_z(2,8) }, ursus.get_rotation_y())) {
 			ursus.move(-speed * elapsed * sin(ursus.get_rotation_y() * GL_PI / 180), 0, -speed * elapsed * sin((ursus.get_rotation_y() + 90) * GL_PI / 180));
 			speed = 0;
@@ -444,7 +448,7 @@ void Update() {
 	}
 	else if (keyboard.Pressed('S') != -1) {
 		ursus.move(speed * elapsed * sin(ursus.get_rotation_y() * GL_PI / 180), 0, speed * elapsed * sin((ursus.get_rotation_y() + 90) * GL_PI / 180));
-		if (collision.collide({ kolotp.get_absolute_position_x(-7,-20 - 50 * !plug.if_unmounted()), kolotp.get_absolute_position_y(),kolotp.get_absolute_position_z(-7,-20 - 50 * !plug.if_unmounted()),kolotl.get_absolute_position_x(7,-20 - 50 * !plug.if_unmounted()), kolotl.get_absolute_position_y(),kolotl.get_absolute_position_z(7,-20 - 50 * !plug.if_unmounted()),
+		if (collision.collide({ kolotp.get_absolute_position_x(-7,-20 - 50 * (!plug.if_unmounted() || !kosiarka.if_unmounted())), kolotp.get_absolute_position_y(),kolotp.get_absolute_position_z(-7,-20 - 50 * (!plug.if_unmounted() || !kosiarka.if_unmounted())),kolotl.get_absolute_position_x(7,-20 - 50 * (!plug.if_unmounted() || !kosiarka.if_unmounted())), kolotl.get_absolute_position_y(),kolotl.get_absolute_position_z(7,-20 - 50 * (!plug.if_unmounted() || !kosiarka.if_unmounted())),
 								kolopp.get_absolute_position_x(-2,8), kolopp.get_absolute_position_y(),kolopp.get_absolute_position_z(-2,8), kolopl.get_absolute_position_x(2,8), kolopl.get_absolute_position_y(),kolopl.get_absolute_position_z(2,8) }, ursus.get_rotation_y())) {
 			ursus.move(-speed * elapsed * sin(ursus.get_rotation_y() * GL_PI / 180), 0, -speed * elapsed * sin((ursus.get_rotation_y() + 90) * GL_PI / 180));
 			speed = 0;
@@ -467,7 +471,7 @@ void Update() {
 	}
 	else {
 		ursus.move(speed * elapsed * sin(ursus.get_rotation_y() * GL_PI / 180), 0, speed * elapsed * sin((ursus.get_rotation_y() + 90) * GL_PI / 180));
-		if (collision.collide({ kolotp.get_absolute_position_x(-7,-20 - 50 * !plug.if_unmounted()), kolotp.get_absolute_position_y(),kolotp.get_absolute_position_z(-7,-20 - 50 * !plug.if_unmounted()),kolotl.get_absolute_position_x(7,-20 - 50 * !plug.if_unmounted()), kolotl.get_absolute_position_y(),kolotl.get_absolute_position_z(7,-20 - 50 * !plug.if_unmounted()),
+		if (collision.collide({ kolotp.get_absolute_position_x(-7,-20 - 50 * (!plug.if_unmounted() || !kosiarka.if_unmounted())), kolotp.get_absolute_position_y(),kolotp.get_absolute_position_z(-7,-20 - 50 * (!plug.if_unmounted() || !kosiarka.if_unmounted())),kolotl.get_absolute_position_x(7,-20 - 50 * (!plug.if_unmounted() || !kosiarka.if_unmounted())), kolotl.get_absolute_position_y(),kolotl.get_absolute_position_z(7,-20 - 50 * (!plug.if_unmounted() || !kosiarka.if_unmounted())),
 								kolopp.get_absolute_position_x(-2,8), kolopp.get_absolute_position_y(),kolopp.get_absolute_position_z(-2,8), kolopl.get_absolute_position_x(2,8), kolopl.get_absolute_position_y(),kolopl.get_absolute_position_z(2,8) }, ursus.get_rotation_y())) {
 			ursus.move(-speed * elapsed * sin(ursus.get_rotation_y() * GL_PI / 180), 0, -speed * elapsed * sin((ursus.get_rotation_y() + 90) * GL_PI / 180));
 			speed = 0;
@@ -495,13 +499,29 @@ void Update() {
 		else
 			plowing = false;
 	}
+	else if (!kosiarka.if_unmounted() && kosiarka.get_rotation_x() < 5 && speed > 5) {
+		float xrot = -80;// pole
+		float zrot = 0;
+		float dist = 2.2 * scale;
+		float px, py, pz;
+		ursus.get_relative_position(px, py, pz, dist, xrot, zrot);
+		if (pole.mow(terrain.get_indexes(px, pz))) {
+			for (int i = 0; i < gestosc_ziemi; i++)
+				if (ziemia[i].if_dead())
+					ziemia[i] = particle(px, py, pz, false, false, 150, -750, 0.3, 5, 0.01f, 0.33f, 0.02f);
+			plowing = true;
+			money += 10*moneymultiplier;
+		}
+		else
+			plowing = false;
+	}
 	else
 		plowing = false;
 	if (keyboard.Pressed('A') != -1) {
 		kolopp.set_rotate_y(wheel_angle);
 		kolopl.set_rotate_y(wheel_angle);
 		ursus.rotate(0, speed * elapsed / (2 * GL_PI * wheelspan / sin(wheel_angle * GL_PI / 180)) * 360, 0); //obrót po okręgu skrętu
-		if (collision.collide({ kolotp.get_absolute_position_x(-7,-20 - 50 * !plug.if_unmounted()), kolotp.get_absolute_position_y(),kolotp.get_absolute_position_z(-7,-20 - 50 * !plug.if_unmounted()),kolotl.get_absolute_position_x(7,-20 - 50 * !plug.if_unmounted()), kolotl.get_absolute_position_y(),kolotl.get_absolute_position_z(7,-20 - 50 * !plug.if_unmounted()),
+		if (collision.collide({ kolotp.get_absolute_position_x(-7,-20 - 50 * (!plug.if_unmounted() || !kosiarka.if_unmounted())), kolotp.get_absolute_position_y(),kolotp.get_absolute_position_z(-7,-20 - 50 * (!plug.if_unmounted() || !kosiarka.if_unmounted())),kolotl.get_absolute_position_x(7,-20 - 50 * (!plug.if_unmounted() || !kosiarka.if_unmounted())), kolotl.get_absolute_position_y(),kolotl.get_absolute_position_z(7,-20 - 50 * (!plug.if_unmounted() || !kosiarka.if_unmounted())),
 								kolopp.get_absolute_position_x(-2,8), kolopp.get_absolute_position_y(),kolopp.get_absolute_position_z(-2,8), kolopl.get_absolute_position_x(2,8), kolopl.get_absolute_position_y(),kolopl.get_absolute_position_z(2,8) }, ursus.get_rotation_y()))
 			ursus.rotate(0, -speed * elapsed / (2 * GL_PI * wheelspan / sin(wheel_angle * GL_PI / 180)) * 360, 0); //obrót po okręgu skrętu
 
@@ -510,7 +530,7 @@ void Update() {
 		kolopp.set_rotate_y(-wheel_angle);
 		kolopl.set_rotate_y(-wheel_angle);
 		ursus.rotate(0, -speed * elapsed / (2 * GL_PI * wheelspan / sin(wheel_angle * GL_PI / 180)) * 360, 0);
-		if (collision.collide({ kolotp.get_absolute_position_x(-7,-20 - 50 * !plug.if_unmounted()), kolotp.get_absolute_position_y(),kolotp.get_absolute_position_z(-7,-20 - 50 * !plug.if_unmounted()),kolotl.get_absolute_position_x(7,-20 - 50 * !plug.if_unmounted()), kolotl.get_absolute_position_y(),kolotl.get_absolute_position_z(7,-20 - 50 * !plug.if_unmounted()),
+		if (collision.collide({ kolotp.get_absolute_position_x(-7,-20 - 50 * (!plug.if_unmounted() || !kosiarka.if_unmounted())), kolotp.get_absolute_position_y(),kolotp.get_absolute_position_z(-7,-20 - 50 * (!plug.if_unmounted() || !kosiarka.if_unmounted())),kolotl.get_absolute_position_x(7,-20 - 50 * (!plug.if_unmounted() || !kosiarka.if_unmounted())), kolotl.get_absolute_position_y(),kolotl.get_absolute_position_z(7,-20 - 50 * (!plug.if_unmounted() || !kosiarka.if_unmounted())),
 								kolopp.get_absolute_position_x(-2,8), kolopp.get_absolute_position_y(),kolopp.get_absolute_position_z(-2,8), kolopl.get_absolute_position_x(2,8), kolopl.get_absolute_position_y(),kolopl.get_absolute_position_z(2,8) }, ursus.get_rotation_y()))
 			ursus.rotate(0, speed * elapsed / (2 * GL_PI * wheelspan / sin(wheel_angle * GL_PI / 180)) * 360, 0); //obrót po okręgu skrętu
 	}
@@ -523,25 +543,51 @@ void Update() {
 		kolopl.set_rotate_y(0);
 	}
 	if (keyboard.Pressed('I') != -1) {
-		if (plug.get_rotation_x() < 30 && !plug.if_unmounted())
-			plug.rotate_x(5);
+		if (!plug.if_unmounted()) {
+			if (plug.get_rotation_x() < 30)
+				plug.rotate_x(5);
+		}
+		else if (!kosiarka.if_unmounted()) {
+			if (kosiarka.get_rotation_x() < 30) {
+				kosiarka.rotate_x(5);
+				ostrze.rotate_x(5);
+			}
+		}
 	}
 	else if (keyboard.Pressed('J') != -1) {
-		if (plug.get_rotation_x() > 0 && !plug.if_unmounted())
-			plug.rotate_x(-5);
+		if (!plug.if_unmounted()) {
+			if (plug.get_rotation_x() > 0)
+				plug.rotate_x(-5);
+		}
+		else if (!kosiarka.if_unmounted()) {
+			if (kosiarka.get_rotation_x() > 0) {
+				kosiarka.rotate_x(-5);
+				ostrze.rotate_x(-5);
+			}
+		}
 	}
 	if (keyboard.Pressed('K') != -1) {
 		if (!plug.if_unmounted()) {
 			plug.unmount();
 			collision.addcircle({ plug.get_absolute_position_x(0,-30), plug.get_absolute_position_y(), plug.get_absolute_position_z(0,-30), 30 });
 		}
+		else if (!kosiarka.if_unmounted()) {
+			kosiarka.unmount();
+			ostrze.unmount();
+			collision.addcircle({ kosiarka.get_absolute_position_x(0,-30), kosiarka.get_absolute_position_y(), kosiarka.get_absolute_position_z(0,-30), 30 });
+		}
 	}
 	else if (keyboard.Pressed('L') != -1) {
-		if (plug.if_unmounted()) {
-			if (plug.to_mount(ursus))
+		if (plug.if_unmounted() && kosiarka.if_unmounted()) {
+			if (plug.to_mount(ursus) && kosiarka.if_unmounted()) {
 				collision.popcircle({ plug.get_absolute_position_x(0,-30), plug.get_absolute_position_y(), plug.get_absolute_position_z(0,-30), 30 });
-			plug.mount(ursus);
-
+				plug.mount(ursus);
+			}
+			if (kosiarka.to_mount(ursus) && plug.if_unmounted()) {
+				collision.popcircle({ kosiarka.get_absolute_position_x(0,-30), kosiarka.get_absolute_position_y(), kosiarka.get_absolute_position_z(0,-30), 30 });
+				kosiarka.mount(ursus);
+				ostrze.mount(ursus);
+			}
 		}
 	}
 	else if (keyboard.Pressed('F') != -1 && !keyboard.switched('F')) {
@@ -641,6 +687,8 @@ void RenderScene(void)
 	tree2.draw();
 	tree3.draw();
 	plug.draw();
+	kosiarka.draw();
+	ostrze.draw();
 	//cross(plug.get_absolute_position_x(0, -30), plug.get_absolute_position_z(0, -30), 30);
 	szopa.draw();
 	glColor3f(0.4, 0.4, 0.4);
@@ -952,6 +1000,8 @@ LRESULT CALLBACK WndProc(HWND    hWnd,
 		kolotp.loadBMP_custom("../obj/kola_texture.bmp");
 		kolotl.loadBMP_custom("../obj/kola_texture.bmp");
 		pole.loadBMP_custom("../obj/szopa_texture.bmp");
+		kosiarka.loadBMP_custom("../obj/mower_texture.bmp");
+		ostrze.loadBMP_custom("../obj/mower_texture.bmp");
 		collision.addsquare({ szopa.get_position_x() - 7.14f * scale,0,szopa.get_position_z() + 4.23f * scale,szopa.get_position_x() - 6.94f * scale,0,szopa.get_position_z() + 4.23f * scale,
 							  szopa.get_position_x() - 7.14f * scale,0,szopa.get_position_z() - 5.76f * scale,szopa.get_position_x() - 6.94f * scale,0,szopa.get_position_z() - 5.76f * scale });
 		collision.addsquare({ szopa.get_position_x() + 3.05f * scale,0,szopa.get_position_z() + 4.23f * scale,szopa.get_position_x() + 2.85f * scale,0,szopa.get_position_z() + 4.23f * scale,
@@ -968,6 +1018,9 @@ LRESULT CALLBACK WndProc(HWND    hWnd,
 		pipe_distance = sqrt(14 * 14 + 60 * 60 + 25 * 25); //odl wydechu
 		if (plug.if_unmounted()) {
 			collision.addcircle({ plug.get_absolute_position_x(0,-30), plug.get_absolute_position_y(), plug.get_absolute_position_z(0,-30), 30 });
+		}
+		if (kosiarka.if_unmounted()) {
+			collision.addcircle({ kosiarka.get_absolute_position_x(0,-30), kosiarka.get_absolute_position_y(), kosiarka.get_absolute_position_z(0,-30), 30 });
 		}
 		break;
 

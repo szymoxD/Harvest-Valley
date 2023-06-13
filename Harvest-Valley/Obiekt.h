@@ -23,6 +23,7 @@ class Obiekt
 	bool has_texture;
 	float scale;
 public:
+	Obiekt(){};
 	Obiekt(const char* path, float scale, const Obiekt* parent = nullptr, float rx = 0.0f, float ry = 0.0f, float rz = 0.0f, float px = 0.0f, float py = 0.0f, float pz = 0.0f, float cx = 0.0f, float cy = 0.0f, float cz = 0.0f);
 	//konstr kop
 	//oper przyp

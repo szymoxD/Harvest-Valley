@@ -2,6 +2,12 @@
 Pole::Pole(Teren* teren_v, float max_lifespan_v) :max_lifespan(max_lifespan_v) {
 	teren = teren_v;
 }
+float Pole::scale = 75;
+Obiekt Pole::grass_s = Obiekt("../obj/plant_l.obj", scale);
+Obiekt Pole::grass_m = Obiekt("../obj/plant_m.obj", scale);
+Obiekt Pole::grass_h = Obiekt("../obj/plant_h.obj", scale);
+
+
 bool Pole::plow(int const* wierzcholki_v) {
 	if (current < 1000) {
 		for (int i = 0; i < current; i++) {
@@ -22,23 +28,47 @@ bool Pole::plow(int const* wierzcholki_v) {
 		wierzcholki[current][2] = wierzcholki_v[2];
 		wierzcholki[current][3] = wierzcholki_v[3];
 		lifespan[current] = max_lifespan;
+		plown[current] = false;
 		current++;
 		delete[] wierzcholki_v;
 		return true;
 	}
+	return false;
 }
+bool Pole::mow(int const* wierzcholki_v) {
+	int pole = -1;
+	if (current < 1000) {
+		for (int i = 0; i < current; i++) {
+			if (wierzcholki[i][0] == wierzcholki_v[0] && wierzcholki[i][1] == wierzcholki_v[1] && wierzcholki[i][2] == wierzcholki_v[2] && wierzcholki[i][3] == wierzcholki_v[3]) {
+				pole = i;
+			}
+		}
+		if (pole >= 0) {
+			float age = 1 - (lifespan[pole] / max_lifespan);
+			if (age >= 0.9) {
+				lifespan[pole] = 0;
+				delete[] wierzcholki_v;
+				plown[pole] = true;
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
 void Pole::update(float elapsed) {
 	for (int i = 0; i < current; i++) {
 		if (lifespan[i] > 0) {
 			lifespan[i] -= elapsed;
 		}
-		if (lifespan[i] <= 0) {
+		if (plown[i]) {
 			for (int j = i; j < current - 1; j++) {
 				wierzcholki[j][0] = wierzcholki[j + 1][0];
 				wierzcholki[j][1] = wierzcholki[j + 1][1];
 				wierzcholki[j][2] = wierzcholki[j + 1][2];
 				wierzcholki[j][3] = wierzcholki[j + 1][3];
 				lifespan[j] = lifespan[j + 1];
+				plown[j] = plown[j + 1];
 			}
 			current--;
 		}
@@ -47,9 +77,8 @@ void Pole::update(float elapsed) {
 void Pole::draw() {
 	for (int i = 0; i < current; i++) {
 		float age = 1 - (lifespan[i] / max_lifespan);  //0 - new,  1- old 
-		glColor3f(0.28f - 0.20 * age, 0.13f + 0.8 * age, 0.02f - 0.01 * age);
-		//glColor3f(1.0f,1.0f,1.0f);
 
+		glColor3f(0.28f - 0.20 * age, 0.13f + 0.8 * age, 0.02f - 0.01 * age);
 		glEnable(GL_TEXTURE_2D);
 		glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 		glBindTexture(GL_TEXTURE_2D, textureID);
@@ -65,8 +94,16 @@ void Pole::draw() {
 		glEnd();
 		glDisableClientState(GL_TEXTURE_COORD_ARRAY);
 		glDisable(GL_TEXTURE_2D);
-
-
+		glColor3f(0.1f + 0.7f * age, 0.71f, 0.04f);
+		Obiekt* trawa;
+		if (age < 0.5)
+			trawa = &grass_s;
+		else if (age < 0.9)
+			trawa = &grass_m;
+		else
+			trawa = &grass_h;
+		trawa->set_position(((*teren)[wierzcholki[i][1]].x + (*teren)[wierzcholki[i][2]].x) / 2, ((*teren)[wierzcholki[i][0]].y+ (*teren)[wierzcholki[i][2]].y)/2,((*teren)[wierzcholki[i][0]].z+ (*teren)[wierzcholki[i][2]].z)/2);
+		trawa->draw();
 	}
 
 }

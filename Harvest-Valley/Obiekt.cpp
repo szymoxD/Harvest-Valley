@@ -132,7 +132,7 @@ void Obiekt::draw() {
 		// Wskazanie atrybutów tekstury
 		glTexCoordPointer(2, GL_FLOAT, 0, &uvs[0]);
 
-		
+
 		glDrawArrays(GL_TRIANGLES, 0, vertices.size());
 
 		glDisableClientState(GL_TEXTURE_COORD_ARRAY);
@@ -143,17 +143,15 @@ void Obiekt::draw() {
 
 		//glColor3f(1.0, 1.0, 1.0);
 		glDrawArrays(GL_TRIANGLES, 0, vertices.size());
-	}	
+	}
 
 	glPopMatrix();
 }
 
 void Obiekt::mount(const Obiekt& ob) {
-	if (abs(pos.x - ob.get_position_x()) < 10 && abs(pos.y - ob.get_position_y()) < 10 && abs(pos.z - ob.get_position_z()) < 10) {
-		mounted = &ob;
-		set_position(0,0,0);
-		set_rotate(0, 0, 0);
-	}
+	mounted = &ob;
+	set_position(0, 0, 0);
+	set_rotate(0, 0, 0);
 }
 void Obiekt::unmount() {
 	set_position(mounted->get_position_x(), mounted->get_position_y(), mounted->get_position_z());
@@ -267,8 +265,8 @@ Obiekt::Obiekt(const Obiekt& ob) {
 	pos = ob.pos;
 	rot = ob.rot;
 	center = ob.center;
-	delete [] vertexArray;
-	vertexArray= new GLfloat[ob.vertices.size() * 3];
+	delete[] vertexArray;
+	vertexArray = new GLfloat[ob.vertices.size() * 3];
 	for (int i = 0; i < ob.vertices.size() * 3; i++)
 		vertexArray[i] = ob.vertexArray[i];
 	delete mounted;
