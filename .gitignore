@@ -33,3 +33,5 @@
 glm/
 x64/
 *.user
+
+!freetype.lib
