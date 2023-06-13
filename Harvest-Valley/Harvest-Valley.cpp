@@ -132,6 +132,16 @@ FT_Face face;
 
 tekst speedtext("",0.02,0.07);
 tekst moneytext("",0.02, 0.97);
+tekst powertext("[1] UPG PWR",0.75, 0.07);
+tekst poweruptext("", 0.75, 0.13);
+tekst maxspeedtext("[2] UPG SPD", 0.75, 0.19);
+tekst maxspeeduptext("",0.75,0.25);
+tekst moneymulttext("[3] UPG GAIN",0.75,0.31);
+tekst moneymultuptext("",0.75,0.37);
+
+int powercost = 50;
+int maxspeedcost = 50;
+int moneymultcost = 50;
 
 
 void acceleratevehicle(float& currentSpeed, float accelerationRate, float maxSpeed, float deltaTime, float vehicleAngle, bool plow, int power) {
@@ -607,6 +617,34 @@ void Update() {
 		xRot = -30;
 		keyboard.block('F');
 	}
+	else if (keyboard.Pressed('1') != -1 && !keyboard.switched('1')) {
+		if (money >= powercost) {
+			money -= powercost;
+			powerfactor += 0.5;
+			powercost *= 1.2;
+		}
+		keyboard.block('1');
+	}
+	else if (keyboard.Pressed('2') != -1 && !keyboard.switched('2')) {
+		if (money >= maxspeedcost) {
+			money -= maxspeedcost;
+			maxspeed += 5;
+			maxspeedcost *= 1.2;
+		}
+		keyboard.block('2');
+	}
+	else if (keyboard.Pressed('3') != -1 && !keyboard.switched('3')) {
+		if (money >= moneymultcost) {
+			money -= moneymultcost;
+			moneymultiplier += 0.1;
+			moneymultcost *= 1.2;
+		}
+		keyboard.block('3');
+	}
+	else if (keyboard.Pressed('P') != -1 && !keyboard.switched('P')) {
+		money += 500;
+		keyboard.block('P');
+	}
 	/*else if (keyboard.Pressed('T') != -1 && !keyboard.switched('T')) {  //teleport x +1000
 		ursus.set_position(ursus.get_position_x() + 1000, ursus.get_position_y(), ursus.get_position_z());
 		keyboard.block('T');
@@ -740,10 +778,6 @@ void RenderScene(void)
 	glPushMatrix();
 	glLoadIdentity();
 
-
-
-	tekst speedtext("", 0.02, 0.07);
-	tekst moneytext("", 0.02, 0.97);
 	//add gui here
 	char b[8] = {}, b2[8] = {};
 	_itoa((int)abs(speed/5), b,10);
@@ -752,12 +786,28 @@ void RenderScene(void)
 	speedtext.draw(znaki);
 	speedtext.drawRect(0.015, 0.015, 0.21, 0.077);
 
-	_itoa((int)abs(money), b2, 10);
-	std::string temp2 = b2;
-	moneytext.setValue("$ "+temp2);
+	_itoa((int)money, b, 10);
+	temp = b;
+	moneytext.setValue("$ "+temp);
 	moneytext.draw(znaki);
-	speedtext.drawRect(0.015, 0.91, 0.3, 0.97);
+	speedtext.drawRect(0.015, 0.91, 0.3, 0.975);
 
+	powertext.draw(znaki);
+	_itoa(powercost, b, 10);
+	temp = b;
+	poweruptext.setValue("$ " + temp);
+	poweruptext.draw(znaki);
+	maxspeedtext.draw(znaki);
+	_itoa(maxspeedcost, b, 10);
+	temp = b;
+	maxspeeduptext.setValue("$ " + temp);
+	maxspeeduptext.draw(znaki);
+	moneymulttext.draw(znaki);
+	_itoa(moneymultcost, b, 10);
+	temp = b;
+	moneymultuptext.setValue("$ " + temp);
+	moneymultuptext.draw(znaki);
+	powertext.drawRect(0.74,0,0.997,0.39);
 
 	glMatrixMode(GL_PROJECTION);
 	glPopMatrix();
@@ -1075,7 +1125,7 @@ LRESULT CALLBACK WndProc(HWND    hWnd,
 			break;
 		if (FT_New_Face(ft, "../fonts/cour.ttf", 0, &face))
 			break;
-		FT_Set_Pixel_Sizes(face, 0, 24);
+		FT_Set_Pixel_Sizes(face, 0, 20);
 		/*FT_Color color;
 		color.alpha = 0;
 		color.blue = 0;
